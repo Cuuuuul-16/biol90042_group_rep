@@ -6,4 +6,114 @@ editor: visual
 
 ## Group_rep
 
-1.  
+### **23.3.1 Population genetics**
+
+1.  Calculate a PRS for each participant. Which participant has the highest PRS? The lowest?
+
+```{r}
+
+```
+
+2.  Plot and describe (with descriptive statistics) the distribution of PRS for both cases and controls.
+
+```{r}
+
+```
+
+3.  Is there a statistically significant difference in the PRS of cases and controls? Ensure you check all the assumptions of the test you choose.
+
+```{r}
+
+```
+
+### **23.3.2 RNA-seq of patient iPSC-derived neurons**
+
+1.  Which genes are differentially expressed between PD cases and healthy controls? Please also visualise your DE results with appropriate plot(s).
+
+```{r}
+
+```
+
+2.  Which gene ontology families do the DE genes belong to?
+
+```{r}
+
+```
+
+3.  Is the clustering of samples by gene expression consistent with their disease status as cases and controls?
+
+```{r}
+
+```
+
+### **23.3.3 Drug screening**
+
+1.  Using the `geom_tile()` function, visualise the luminescence across the plate. Do there appear to be any spatial patterns in this data?
+
+```{r}
+
+```
+
+2.  Which compounds are statistically significantly associated with increased neuronal viability after MPP exposure? Ensure that you check your assumptions.
+
+```{r}
+
+```
+
+3.  What are the mechanisms of action and targets of the compounds you identify in Q2?
+
+```{r}
+
+```
+
+### **23.3.4 Clinical trial**
+
+1.  Plot each participants’ gait data and describe it using descriptive statistics. Which of these descriptive statistics do you think is most useful for capturing the overall gait smoothness and balance of a participant?
+
+```{r}
+
+```
+
+2.  Is there a statistically significant difference in gait between participants receiving L-DOPA and the new compound? Ensure that you check your assumptions.
+
+```{r}
+
+```
+
+3.  Does either of age or the exercise regime affect gait? If so, take this into consideration when investigating the relationship between the treatment and gait.
+
+```{r}
+
+```
+
+### **23.3.5 Bringing it together/linking between datasets**
+
+1.  Using their unique donor IDs, how many patients appear across all four arms of the study?
+
+```{r}
+
+```
+
+2.  Do any variables other than gene expression distinguish the RNA-seq cases from controls? (Hint: try colouring points on your MDS plot by other information you have about the donors, from the other datasets)
+
+```{r}
+
+```
+
+3.  Are any of the gene targets of hit compounds from the drug screen, differentially expressed in RNA-seq? Which GO terms are they associated with and what might this tell you about the pathology of PD?
+
+```{r}
+
+```
+
+4.  Is there any relationship between the PRS and gait of patients in the clinical trial?
+
+```{r}
+
+```
+
+5.  In a paragraph, summarise your findings and suggest directions for future research.
+
+```{r}
+
+```
