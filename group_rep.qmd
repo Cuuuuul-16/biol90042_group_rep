@@ -46,7 +46,20 @@ PRS_filtered |>
     median_PRS=median(PRS),
     sd_PRS=sd(PRS),
     .by=status
-  )
+  ) #descriptive statistics of the distribution of PRS for both cases and controls
+
+ggplot(
+  data=PRS_filtered,
+  aes(x=PRS, fill=status))+
+  geom_histogram(bins=15)+ #creating a histogram that range into 15 bars, choose 15 is because it is much smoother compare to bins=30 which is the default, and easier to see overall distribution
+  facet_wrap(~status)+ #make two separate plots based on the status
+  labs(
+    title="Distribution of PRS for both cases and controls",
+    x="Polygenic risk score",
+    y="Count",
+    )+
+  theme_minimal()+ #to minimize background, look better
+  theme(legend.position="none") #because each panel is already labelled with case and control, so having the legend is meaningless, therefore it is removed
 
 ```
 
