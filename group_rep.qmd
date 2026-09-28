@@ -6,11 +6,32 @@ editor: visual
 
 ## Group_rep
 
+Load dataset:
+
+```{r}
+library(tidyverse)
+drugscreen <- load("../group3_data/drugscreen.Rda")
+gait<- load("../group3_data/gait.Rda")
+prs<- load("../group3_data/prs.Rda")
+rnaseq<- load("../group3_data/rnaseq.Rda")
+rnaseq_gene_info<- load("../group3_data/rnaseq_gene_info.Rda")
+```
+
 ### **23.3.1 Population genetics**
 
 1.  Calculate a PRS for each participant. Which participant has the highest PRS? The lowest?
 
 ```{r}
+PRS_GUGA1<-ca_co_genotypes |> 
+  mutate(
+    PRS=rowSums(select(ca_co_genotypes, starts_with("locus_"))*gwas_top_hits$beta
+  )) #calculate the PRS for each participant
+PRS_GUGUGAGA1<-PRS_GUGA1 |> 
+  select(starts_with("PRS"))  #select the PRS column
+PRS_GUGA1 |> 
+  slice_max(PRS, n=1) #participant with the highest PRS
+PRS_GUGA1 |> 
+  slice_min(PRS, n=1) #participant with the lowest PRS
 
 ```
 
