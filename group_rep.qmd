@@ -102,7 +102,34 @@ library(ggrepel)
 1.  Which genes are differentially expressed between PD cases and healthy controls? Please also visualise your DE results with appropriate plot(s).
 
 ```{r}
+#Firstly, we need to filter our lowly expressed genes to increase our statistical power. To do this, we will use the filterByExpr() function in the edgeR package. This will keep genes with a count of 10 or more in at least 8 samples (as we have 8 samples per group)
+keep <- filterByExpr(dge)
+#To check the proportion of genes we have ommited, we can create a proportions table:
+proportions(table(keep)) #We are keeping 97.77% of our genes
+#to apply this filter to the DGE object, we will use [] to filter out FALSE hits (lowly expressed genes) and assign this dge
+dge <- dge[keep, , keep.lib.sizes = FALSE]
 
+#Now we need to normalise our data by converting it to counts per million (CPM), so we can compare samples and groups, and account for RNA composition bias. To do this we will use the TMM method to calculate the normalisation factor for each sample. normLibSizes() function can be used to calculate normalisation factors
+dge <- normLibSizes(dge, method = "TMM")
+#the normalisation factors in dge$samples are close to 1 in all samples, suggesting minimal difference in RNA composition between samples
+
+#Now we will fit a linear model using the limma-voom framework by first creating a design matrix to represent covariates
+
+design <- model.matrix(~group, data = dge$samples)
+
+#We will first need to rename our design matrix to be cleaner
+colnames(design) <- c("Intercept", "Case")
+
+v <- voom(dge, design, plot = TRUE)
+vfit <- lmFit(v, design)
+efit <- eBayes(vfit)
+dt <- decideTests(efit)
+summary(dt[, "Case"])
+top <- topTable(efit, coef = "Case", number = Inf)
+top_tibble <- as_tibble(top)
+
+#MA plot
+limma::plotMA(efit, coef = "Case", status = dt[, "Case"])
 ```
 
 2.  Which gene ontology families do the DE genes belong to?
@@ -114,7 +141,29 @@ library(ggrepel)
 3.  Is the clustering of samples by gene expression consistent with their disease status as cases and controls?
 
 ```{r}
+#Now we want to check that our samples group together as we'd expect based on our experimental design, by making an MDS plot. This will show us whether or not the controls group together, and the PD patients group together. To do this, we will use the plotMDS() function and then make the MDS plot in ggplot2
+plotMDS(dge, labels = dge$samples$group)
 
+mds_result <- plotMDS(dge)
+#create tibble
+mds_tibble <- tibble(
+  x = mds_result$x,
+  y = mds_result$y,
+  sample = colnames(dge),
+  group = dge$samples$group
+)
+#
+dim1_var_explained <- round(mds_result$var.explained[1] * 100)
+dim2_var_explained <- round(mds_result$var.explained[2] * 100)
+#create ggplot
+ggplot(data = mds_tibble,
+       aes(x = x, y = y, colour = group)) + geom_point() + geom_text_repel(aes(label = sample)) +
+  labs(
+    x = paste0("Leading logFC dim 1 (", dim1_var_explained, "%)"),
+    y = paste0("Leading logFC dim 2 (", dim2_var_explained, "%)")
+  )
+
+# From this plot we can see that 5/8 of the PD patient groups cluster to the left of the map, while the other 3 PD patients cluster with the 8 control cases
 ```
 
 ### **23.3.3 Drug screening**
