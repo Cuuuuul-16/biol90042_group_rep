@@ -89,6 +89,16 @@ wilcox.test(PRS~status, data=PRS_filtered)
 
 ### **23.3.2 RNA-seq of patient iPSC-derived neurons**
 
+Firstly, load the packages
+
+```{r}
+library(edgeR)
+library(RNAseq123)
+library(limma)
+library(pheatmap)
+library(ggrepel)
+```
+
 1.  Which genes are differentially expressed between PD cases and healthy controls? Please also visualise your DE results with appropriate plot(s).
 
 ```{r}
