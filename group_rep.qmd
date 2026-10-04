@@ -115,21 +115,32 @@ dge <- normLibSizes(dge, method = "TMM")
 
 #Now we will fit a linear model using the limma-voom framework by first creating a design matrix to represent covariates
 
-design <- model.matrix(~group, data = dge$samples)
+design <- model.matrix(~0 + group, data = dge$samples)
 
 #We will first need to rename our design matrix to be cleaner
-colnames(design) <- c("Intercept", "Case")
+colnames(design) <- c("Control", "Case")
+
+#Contrast matrix
+contr_matrix <- makeContrasts(
+  CasevsControl = "Case - Control",
+  levels = design
+)
 
 v <- voom(dge, design, plot = TRUE)
-vfit <- lmFit(v, design)
+vfit <- lmFit(v)
+#apply constrasts
+vfit <- contrasts.fit(vfit, contrasts = contr_matrix)
+#statistical test
 efit <- eBayes(vfit)
+#decide tests functin to decide if a gene is differentially expressed or not
 dt <- decideTests(efit)
-summary(dt[, "Case"])
-top <- topTable(efit, coef = "Case", number = Inf)
+summary(dt)
+top <- topTable(efit, coef = "CasevsControl", number = Inf)
+#converted to tibble to make it easier to work with
 top_tibble <- as_tibble(top)
 
 #MA plot
-limma::plotMA(efit, coef = "Case", status = dt[, "Case"])
+limma::plotMA(efit, coef = "CasevsControl", status = dt[, "CasevsControl"])
 ```
 
 2.  Which gene ontology families do the DE genes belong to?
@@ -162,7 +173,7 @@ ggplot(data = mds_tibble,
     x = paste0("Leading logFC dim 1 (", dim1_var_explained, "%)"),
     y = paste0("Leading logFC dim 2 (", dim2_var_explained, "%)")
   )
-
+#IMPROVE PLOT
 # From this plot we can see that 5/8 of the PD patient groups cluster to the left of the map, while the other 3 PD patients cluster with the 8 control cases
 ```
 
