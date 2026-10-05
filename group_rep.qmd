@@ -132,15 +132,80 @@ vfit <- lmFit(v)
 vfit <- contrasts.fit(vfit, contrasts = contr_matrix)
 #statistical test
 efit <- eBayes(vfit)
-#decide tests functin to decide if a gene is differentially expressed or not
+#decide tests function to decide if a gene is differentially expressed or not
 dt <- decideTests(efit)
 summary(dt)
 top <- topTable(efit, coef = "CasevsControl", number = Inf)
 #converted to tibble to make it easier to work with
 top_tibble <- as_tibble(top)
 
+
 #MA plot
 limma::plotMA(efit, coef = "CasevsControl", status = dt[, "CasevsControl"])
+
+##ggplot MA plot
+#first need to assign gene names to the efit$genes dataframe
+
+#turning efit$genes into character
+efit$genes$genes <- as.character(efit$genes$genes)
+#so I can now change efit$genes to include SYMBOL column which matches the entrez_genename_key#entrezid to efit$genes$genes, and supplies the entrez_genename_key$gene_name to the efit$genes dataframe
+efit$genes$SYMBOL <- entrez_genename_key$gene_name[
+  match(efit$genes$genes, entrez_genename_key$entrezid)]
+
+#now organise fata from efit into a tibble format
+ma_plot_data <- tibble(logFC = efit$coefficients[, "CasevsControl"],
+                       AvgExpr = efit$Amean,
+                       status = factor(as.numeric(dt[, "CasevsControl"])),
+                       gene = efit$genes$SYMBOL,
+                       p_value = efit$p.value[, "CasevsControl"])
+
+ma_plot_data_fct <- ma_plot_data %>%
+  mutate(
+    # replace status with a new factor
+    status = factor(
+      status,
+      # levels (order is not DE, down, up)
+      levels = c(0, -1, 1),
+      # labels for the numbers so they are readble
+      labels = c("Not DE", "Down", "Up")
+    )
+  )
+#labelling of top most significant genes
+top_de_genes <- ma_plot_data_fct %>%
+  slice_min(n = 15, p_value)
+#colours to label points by
+scale_cols <- c(
+  "Not DE" = "black",
+  "Down" = "#1a0099",
+  "Up" = "#990000"
+)
+#MA ggplot
+ggplot(ma_plot_data_fct, aes(x = AvgExpr, y = logFC, col = status)) +
+  geom_point(data = ma_plot_data_fct %>% filter(status == "Not DE"), size = 0.1) +
+  geom_point(data = ma_plot_data_fct %>% filter(status != "Not DE"), size = 1) +
+  geom_label_repel(
+    data = top_de_genes,
+    aes(label = gene, col = NULL),
+    max.overlaps = 20,
+    show.legend = FALSE
+  ) +
+  scale_colour_manual(values = scale_cols) + 
+  theme_classic() +
+  labs(title = "MA plot for Case vs Control")
+
+#Volcano Plot
+ggplot(ma_plot_data_fct, aes(x = logFC, y = -log10(p_value), col = status)) +
+  geom_point(data = ma_plot_data_fct %>% filter(status == "Not DE"), size = 0.1) +
+  geom_point(data = ma_plot_data_fct %>% filter(status != "Not DE"), size = 1) +
+  geom_label_repel(
+    data = top_de_genes,
+    aes(label = gene, col = NULL),
+    max.overlaps = 20,
+    show.legend = FALSE
+  ) +
+  scale_colour_manual(values = scale_cols) + 
+  theme_classic() +
+  labs(title = "Volcano plot for Case Vs Control")
 ```
 
 2.  Which gene ontology families do the DE genes belong to?
