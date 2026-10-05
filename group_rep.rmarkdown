@@ -1,0 +1,251 @@
+---
+title: "group_rep"
+format: html
+editor: visual
+---
+
+## Group_rep
+
+Load dataset:
+
+```{r}
+library(tidyverse)
+drugscreen <- load("../group3_data/drugscreen.Rda")
+gait<- load("../group3_data/gait.Rda")
+prs<- load("../group3_data/prs.Rda")
+rnaseq<- load("../group3_data/rnaseq.Rda")
+rnaseq_gene_info<- load("../group3_data/rnaseq_gene_info.Rda")
+```
+
+### **23.3.1 Population genetics**
+
+1.  Calculate a PRS for each participant. Which participant has the highest PRS? The lowest?
+
+```{r}
+PRS_full<-ca_co_genotypes |> 
+  mutate(
+    PRS=rowSums(select(ca_co_genotypes, starts_with("locus_"))*gwas_top_hits$beta
+  )) #calculate the PRS for each participant
+PRS_filtered<-PRS_full |> 
+  select(donorid, status, starts_with("PRS"))  #select the PRS column
+PRS_filtered |> 
+  slice_max(PRS, n=1) #participant with the highest PRS
+PRS_filtered |> 
+  slice_min(PRS, n=1) #participant with the lowest PRS
+
+```
+
+2.  Plot and describe (with descriptive statistics) the distribution of PRS for both cases and controls.
+
+```{r}
+PRS_filtered |> 
+  summarise(
+    min_PRS=min(PRS),
+    max_PRS=max(PRS),
+    mean_PRS=mean(PRS),
+    median_PRS=median(PRS),
+    sd_PRS=sd(PRS),
+    .by=status
+  ) #descriptive statistics of the distribution of PRS for both cases and controls
+#from the descriptive statistics, there is an increase of PRS in cases group compare to the controls group, where the max PRS remain similar
+ggplot(
+  data=PRS_filtered,
+  aes(x=PRS, fill=status))+
+  geom_histogram(bins=15)+ #creating a histogram that range into 15 bars, choose 15 is because it is much smoother compare to bins=30 which is the default, and easier to see overall distribution
+  facet_wrap(~status)+ #make two separate plots based on the status
+  labs(
+    title="Distribution of PRS for both cases and controls",
+    x="Polygenic risk score",
+    y="Count",
+    )+
+  theme_minimal()+ #to minimize background, look better
+  theme(legend.position="none") #because each panel is already labelled with case and control, so having the legend is meaningless, therefore it is removed
+
+```
+
+3.  Is there a statistically significant difference in the PRS of cases and controls? Ensure you check all the assumptions of the test you choose.
+
+```{r}
+#check normality visually
+ggplot(PRS_filtered, aes(sample=PRS))+
+  geom_qq()+
+  geom_qq_line()+
+  facet_wrap(~status)
+#QQ-plot does suggest normality for case, but do not suggest normality for ctrl, confirm normality using Shapiro Wilks test
+PRS_filtered |> 
+  filter(status=="case") |> 
+  pull(PRS) |> 
+  shapiro.test()
+PRS_filtered |> 
+  filter(status=="ctrl") |> 
+  pull(PRS) |> 
+  shapiro.test()
+#for case, the p value is 0.1856, no evidence against normality
+#for ctrl, the p value is 0.0006253, very strong evidence against normality
+#to do a t-test, both group need to meet the normality assumption, since the ctrl group has violated the assumption, t-test is not appropriate here. Wilcox test will be applied here to compare the two groups.
+wilcox.test(PRS~status, data=PRS_filtered)
+#the wilcoxon test statistics value is 16028 with a p-value of 2.005e-10. This suggests a extremely strong evidence that the PRS distribution differ between the Pakinson disease case group and the control group, with case group have higher PRS compare to the control group
+```
+
+### **23.3.2 RNA-seq of patient iPSC-derived neurons**
+
+Firstly, load the packages
+
+```{r}
+library(edgeR)
+library(RNAseq123)
+library(limma)
+library(pheatmap)
+library(ggrepel)
+```
+
+1.  Which genes are differentially expressed between PD cases and healthy controls? Please also visualise your DE results with appropriate plot(s).
+
+```{r}
+#Firstly, we need to filter our lowly expressed genes to increase our statistical power. To do this, we will use the filterByExpr() function in the edgeR package. This will keep genes with a count of 10 or more in at least 8 samples (as we have 8 samples per group)
+keep <- filterByExpr(dge)
+#To check the proportion of genes we have ommited, we can create a proportions table:
+proportions(table(keep)) #We are keeping 97.77% of our genes
+#to apply this filter to the DGE object, we will use [] to filter out FALSE hits (lowly expressed genes) and assign this dge
+dge <- dge[keep, , keep.lib.sizes = FALSE]
+
+#Now we need to normalise our data by converting it to counts per million (CPM), so we can compare samples and groups, and account for RNA composition bias. To do this we will use the TMM method to calculate the normalisation factor for each sample. normLibSizes() function can be used to calculate normalisation factors
+dge <- normLibSizes(dge, method = "TMM")
+#the normalisation factors in dge$samples are close to 1 in all samples, suggesting minimal difference in RNA composition between samples
+
+#Now we will fit a linear model using the limma-voom framework by first creating a design matrix to represent covariates
+
+design <- model.matrix(~0 + group, data = dge$samples)
+
+#We will first need to rename our design matrix to be cleaner
+colnames(design) <- c("Control", "Case")
+
+#Contrast matrix
+contr_matrix <- makeContrasts(
+  CasevsControl = "Case - Control",
+  levels = design
+)
+
+v <- voom(dge, design, plot = TRUE)
+vfit <- lmFit(v)
+#apply constrasts
+vfit <- contrasts.fit(vfit, contrasts = contr_matrix)
+#statistical test
+efit <- eBayes(vfit)
+#decide tests functin to decide if a gene is differentially expressed or not
+dt <- decideTests(efit)
+summary(dt)
+top <- topTable(efit, coef = "CasevsControl", number = Inf)
+#converted to tibble to make it easier to work with
+top_tibble <- as_tibble(top)
+
+#MA plot
+limma::plotMA(efit, coef = "CasevsControl", status = dt[, "CasevsControl"])
+```
+
+2.  Which gene ontology families do the DE genes belong to?
+
+```{r}
+
+```
+
+3.  Is the clustering of samples by gene expression consistent with their disease status as cases and controls?
+
+```{r}
+#Now we want to check that our samples group together as we'd expect based on our experimental design, by making an MDS plot. This will show us whether or not the controls group together, and the PD patients group together. To do this, we will use the plotMDS() function and then make the MDS plot in ggplot2
+plotMDS(dge, labels = dge$samples$group)
+
+mds_result <- plotMDS(dge)
+#create tibble
+mds_tibble <- tibble(
+  x = mds_result$x,
+  y = mds_result$y,
+  sample = colnames(dge),
+  group = dge$samples$group
+)
+#
+dim1_var_explained <- round(mds_result$var.explained[1] * 100)
+dim2_var_explained <- round(mds_result$var.explained[2] * 100)
+#create ggplot
+ggplot(data = mds_tibble,
+       aes(x = x, y = y, colour = group)) + geom_point() + geom_text_repel(aes(label = sample)) +
+  labs(
+    x = paste0("Leading logFC dim 1 (", dim1_var_explained, "%)"),
+    y = paste0("Leading logFC dim 2 (", dim2_var_explained, "%)")
+  )
+#IMPROVE PLOT
+# From this plot we can see that 5/8 of the PD patient groups cluster to the left of the map, while the other 3 PD patients cluster with the 8 control cases
+```
+
+### **23.3.3 Drug screening**
+
+1.  Using the `geom_tile()` function, visualise the luminescence across the plate. Do there appear to be any spatial patterns in this data?
+
+```{r}
+
+```
+
+2.  Which compounds are statistically significantly associated with increased neuronal viability after MPP exposure? Ensure that you check your assumptions.
+
+```{r}
+
+```
+
+3.  What are the mechanisms of action and targets of the compounds you identify in Q2?
+
+```{r}
+
+```
+
+### **23.3.4 Clinical trial**
+
+1.  Plot each participants’ gait data and describe it using descriptive statistics. Which of these descriptive statistics do you think is most useful for capturing the overall gait smoothness and balance of a participant?
+
+```{r}
+
+```
+
+2.  Is there a statistically significant difference in gait between participants receiving L-DOPA and the new compound? Ensure that you check your assumptions.
+
+```{r}
+
+```
+
+3.  Does either of age or the exercise regime affect gait? If so, take this into consideration when investigating the relationship between the treatment and gait.
+
+```{r}
+
+```
+
+### **23.3.5 Bringing it together/linking between datasets**
+
+1.  Using their unique donor IDs, how many patients appear across all four arms of the study?
+
+```{r}
+
+```
+
+2.  Do any variables other than gene expression distinguish the RNA-seq cases from controls? (Hint: try colouring points on your MDS plot by other information you have about the donors, from the other datasets)
+
+```{r}
+
+```
+
+3.  Are any of the gene targets of hit compounds from the drug screen, differentially expressed in RNA-seq? Which GO terms are they associated with and what might this tell you about the pathology of PD?
+
+```{r}
+
+```
+
+4.  Is there any relationship between the PRS and gait of patients in the clinical trial?
+
+```{r}
+
+```
+
+5.  In a paragraph, summarise your findings and suggest directions for future research.
+
+```{r}
+
+```
+
