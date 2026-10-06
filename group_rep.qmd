@@ -10,11 +10,11 @@ Load dataset:
 
 ```{r}
 library(tidyverse)
-drugscreen <- load("../group3_data/drugscreen.Rda")
-gait<- load("../group3_data/gait.Rda")
-prs<- load("../group3_data/prs.Rda")
-rnaseq<- load("../group3_data/rnaseq.Rda")
-rnaseq_gene_info<- load("../group3_data/rnaseq_gene_info.Rda")
+drugscreen <- load("~/Desktop/biol90042_group_rep/drugscreen.Rda")
+gait<- load("~/Desktop/biol90042_group_rep/gait.Rda")
+prs<- load("~/Desktop/biol90042_group_rep/prs.Rda")
+rnaseq<- load("~/Desktop/biol90042_group_rep/rnaseq.Rda")
+rnaseq_gene_info<- load("~/Desktop/biol90042_group_rep/rnaseq_gene_info.Rda")
 ```
 
 ### **23.3.1 Population genetics**
@@ -247,19 +247,131 @@ ggplot(data = mds_tibble,
 1.  Using the `geom_tile()` function, visualise the luminescence across the plate. Do there appear to be any spatial patterns in this data?
 
 ```{r}
+# Convert the plate data to long format, with each row representing one well.
+plate1_long <- plate1 |> 
+  pivot_longer(
+    cols = contains("col"),
+    names_to = "column",
+    values_to = "RLU"
+  ) |> 
+  # create numeric row and column coordinates for plotting
+  mutate(
+    row_num = as.numeric(str_remove(plate_row, "row")),
+    col_num = as.numeric(str_remove(column, "col"))
+  )
 
+# Heat map
+ggplot(plate1_long, aes(x = col_num, y = row_num, fill = RLU)) +
+  geom_tile() +
+  scale_fill_gradient(low = "lightblue", high = "darkblue", limits = c(429, 742), breaks = seq(400, 750, by = 50)) +
+  labs(
+    title = "Luminescence across the 1536-well plate",
+    x = "Column",
+    y = "Row",
+    fill = "Luminescence (RLU)"
+  ) +
+  theme_minimal()
+
+# Most values have relatively similar luminescence values.
+# A few individual wells have much higher luminescence, coloured with dark blue.
+# No obvious consistent gradient from one side of the plate to the other. 
+# No obvious edge effect where wells around the edges are consistently higher or lower.
 ```
 
 2.  Which compounds are statistically significantly associated with increased neuronal viability after MPP exposure? Ensure that you check your assumptions.
 
 ```{r}
+# Convert the plate_meta data to long format, with each row representing one well.
+plate_meta_long <- plate_meta |> 
+  pivot_longer(
+    cols = contains("col"),
+    names_to = "column",
+    values_to = "compound"
+  )
 
+# Combine the luminescence results with compound information based on each well's row and column.
+drug_data <- plate_meta_long |> 
+  left_join(
+    plate1_long,
+    by = c("plate_row", "column")
+  )
+
+# Separate the compound ID from the test/control label at the last underscore.
+drug_data <- drug_data |> 
+  mutate(
+    group = str_extract(compound, "test|ctrl"),
+    compound = str_remove(compound, "_(test|ctrl)$")
+  )
+
+# Summarise luminescence by test and control groups.
+compound_summary <- drug_data |> 
+  summarise (
+    mean_RLU = mean(RLU),
+    median_RLU = median(RLU),
+    sd_RLU = sd(RLU),
+    n = n(),
+    .by = c(compound, group)
+  ) |> 
+  pivot_wider(
+    names_from = group,
+    values_from = c(mean_RLU, median_RLU, sd_RLU)
+  ) |> # Put test and control results side by side for each compound.
+  mutate(
+    difference = mean_RLU_test - mean_RLU_ctrl
+  ) # Calculate the difference in mean RLU between test and control groups.
+
+# Welch's t-test assumption checking
+# First, check the normality of RLU for some compounds
+drug_data |> 
+  filter(compound %in% c( "cmpd_6406", "cmpd_4834", "cmpd_6255")) |> 
+  ggplot(aes(sample = RLU)) +
+  stat_qq() +
+  stat_qq_line() +
+  facet_wrap(~compound + group)
+# The QQ plots show no obvious deviation from normality across these compounds. However, normality is difficult to confirm with only four replicates per group.
+
+#Perform Welch's t-test without assuming equal variances.
+t_test_results <- drug_data |> 
+  summarise(
+    p_value = t.test(RLU ~group, var.equal = FALSE)$p.value,
+    .by = compound
+  )
+# Adjust p-values for multiple testing using the Benjamini-Hochberg method.
+t_test_results <- t_test_results |> 
+  mutate(
+    p_adjusted = p.adjust(p_value, method = "BH")
+  )
+
+# Combine t-test results with compound summary information
+t_test_results <- t_test_results |> 
+  left_join(
+    compound_summary |> 
+      dplyr::select(compound, difference), # Keep only the compound ID and mean RLU difference.
+    by = "compound"
+  )
+# Find significant compounds associated with increased neuronal viability.
+t_test_results |> 
+  filter(p_adjusted < 0.05,
+         difference > 0)
+
+# Conclusion: Four compounds (cmpd_5386, cmpd_5118, cmpd_7466 and cmpd_6972) significantly increased neuronal viability after MPP exposure.
 ```
 
 3.  What are the mechanisms of action and targets of the compounds you identify in Q2?
 
 ```{r}
+# Find the target and mechanism of action for the significant compounds.
+compound_dict |> 
+  filter(id %in% c("cmpd_5386", "cmpd_5118", "cmpd_7466", "cmpd_6972"))
 
+# NOT SURE IF BELOW IS NECESSARY:
+# Combine significant compounds with their targets and mechanisms of action.
+question3_results <- t_test_results |> 
+  filter(p_adjusted < 0.05, difference > 0) |> 
+  left_join(
+    compound_dict,
+    by = c("compound" = "id")
+  )
 ```
 
 ### **23.3.4 Clinical trial**
