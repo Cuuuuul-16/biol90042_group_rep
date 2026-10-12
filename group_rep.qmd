@@ -139,10 +139,6 @@ top <- topTable(efit, coef = "CasevsControl", number = Inf)
 #converted to tibble to make it easier to work with
 top_tibble <- as_tibble(top)
 
-
-#MA plot
-limma::plotMA(efit, coef = "CasevsControl", status = dt[, "CasevsControl"])
-
 ##ggplot MA plot
 #first need to assign gene names to the efit$genes dataframe
 
