@@ -22,36 +22,52 @@ rnaseq_gene_info<- load("../group3_data/rnaseq_gene_info.Rda")
 1.  Calculate a PRS for each participant. Which participant has the highest PRS? The lowest?
 
 ```{r}
-PRS_full<-ca_co_genotypes |> 
+longer_ca_co_genotypes<-ca_co_genotypes |> 
+  pivot_longer(
+    cols=starts_with("locus_"),
+    names_to="risk_locus",
+    values_to="risk_genotype_dosage"
+  ) |> 
+  left_join(
+    gwas_top_hits |> 
+      select(locus, beta), #select the locus and beta row
+    by = join_by(risk_locus == locus)
+    )
+#make it easier to do following calculation
+One_locus_score<-longer_ca_co_genotypes |> 
   mutate(
-    PRS=rowSums(select(ca_co_genotypes, starts_with("locus_"))*gwas_top_hits$beta
-  )) #calculate the PRS for each participant
-PRS_filtered<-PRS_full |> 
-  select(donorid, status, starts_with("PRS"))  #select the PRS column
-PRS_filtered |> 
-  slice_max(PRS, n=1) #participant with the highest PRS
-PRS_filtered |> 
-  slice_min(PRS, n=1) #participant with the lowest PRS
-#the participant with the highest PRS is 2.55 and the donorID is d210
-#the participant with the lowest PRS is 0.194 and the donorID is d291
+    one_locus_score=risk_genotype_dosage*beta
+  ) 
+#calculate the locus score for each individual locus
+PRS<-One_locus_score |> 
+  summarise(
+    Polygenic_risk_score=sum(one_locus_score),
+    .by = c(donorid, status)
+    )
+#calculate the PRS for each participant
+PRS |> 
+  slice_max(Polygenic_risk_score, n=1) #participant with the highest PRS
+PRS |> 
+  slice_min(Polygenic_risk_score, n=1) #participant with the lowest PRS
+#the participant with the highest PRS is 2.389 and the donorID is d249 (control)
+#the participant with the lowest PRS is 0.172 and the donorID is d205 (case)
 ```
 
 2.  Plot and describe (with descriptive statistics) the distribution of PRS for both cases and controls.
 
 ```{r}
-PRS_filtered |> 
+PRS |> 
   summarise(
-    min_PRS=min(PRS),
-    max_PRS=max(PRS),
-    mean_PRS=mean(PRS),
-    median_PRS=median(PRS),
-    sd_PRS=sd(PRS),
+    min_PRS=min(Polygenic_risk_score),
+    max_PRS=max(Polygenic_risk_score),
+    mean_PRS=mean(Polygenic_risk_score),
+    median_PRS=median(Polygenic_risk_score),
+    sd_PRS=sd(Polygenic_risk_score),
     .by=status
   ) #descriptive statistics of the distribution of PRS for both cases and controls
-#from the descriptive statistics, there is an increase of PRS in cases group compare to the controls group, where the max PRS remain similar
 ggplot(
-  data=PRS_filtered,
-  aes(x=PRS, fill=status))+
+  data=PRS,
+  aes(x=Polygenic_risk_score, fill=status))+
   geom_histogram(bins=15)+ #creating a histogram that range into 15 bars, choose 15 is because it is much smoother compare to bins=30 which is the default, and easier to see overall distribution
   facet_wrap(~status)+ #make two separate plots based on the status
   labs(
@@ -61,33 +77,34 @@ ggplot(
     )+
   theme_minimal()+ #to minimize background, look better
   theme(legend.position="none") #because each panel is already labelled with case and control, so having the legend is meaningless, therefore it is removed
-#control is more positively skewed where the case is more centred
-#the mean and median PRS valua is higher compare in the control group and slightly higher standard deviation which means a bit more variation in case PRS value
-#case group have a little higher minimum PRS value compare to control, however, their maximum PRS value is similar, this means it is hard to distinguish case from control using the PRS value alone 
+ggplot(PRS, aes(x=status, y=Polygenic_risk_score))+
+  geom_boxplot()
+#case group have higher mean and median PRS, with slightly greater standard deviation (variation) compare to the control group. The distributions of both group overlap substantially, hence the PRS cannot be perfectly distinguish case from control.
+#both disttibution are unimodal and symmetric, and both have two outliers, case outliers have the lowest PRS and the control outliers have the higher PRS
 ```
 
 3.  Is there a statistically significant difference in the PRS of cases and controls? Ensure you check all the assumptions of the test you choose.
 
 ```{r}
 #check normality visually
-ggplot(PRS_filtered, aes(sample=PRS))+
+ggplot(PRS, aes(sample=Polygenic_risk_score))+
   geom_qq()+
   geom_qq_line()+
   facet_wrap(~status)
-#QQ-plot does suggest normality for case, but do not suggest normality for ctrl, confirm normality using Shapiro Wilks test
-PRS_filtered |> 
+#QQ-plot does suggest normality for both case and control, a shapiro-wilk test will confirm this finding
+PRS |> 
   filter(status=="case") |> 
-  pull(PRS) |> 
+  pull(Polygenic_risk_score) |> 
   shapiro.test()
-PRS_filtered |> 
+PRS |> 
   filter(status=="ctrl") |> 
-  pull(PRS) |> 
+  pull(Polygenic_risk_score) |> 
   shapiro.test()
-#for case, the p value is 0.1856, no evidence against normality
-#for ctrl, the p value is 0.0006253, very strong evidence against normality
-#to do a t-test, both group need to meet the normality assumption, since the ctrl group has violated the assumption, t-test is not appropriate here. Wilcox test will be applied here to compare the two groups.
-wilcox.test(PRS~status, data=PRS_filtered)
-#the wilcoxon test statistics value is 16028 with a p-value of 2.005e-10. This suggests a extremely strong evidence that the PRS distribution differ between the Pakinson disease case group and the control group, with case group have higher PRS compare to the control group
+#for case, the p value is 0.2129, no evidence against normality
+#for ctrl, the p value is 0.007452, strong evidence against normality
+#to do a t-test, both group need to meet the normality assumption, since the ctrl group has violated the assumption, Wilcoxon rank-sum test will be applied here to compare the two groups instead of t-test.
+wilcox.test(Polygenic_risk_score~status, data=PRS)
+#the wilcoxon test statistics value is 15554 with a p-value of 1.013e-08. This suggests a extremely strong evidence that the PRS distribution differ between the Pakinson disease case group and the control group, with case group have higher PRS compare to the control group
 ```
 
 ### **23.3.2 RNA-seq of patient iPSC-derived neurons**
@@ -541,7 +558,12 @@ lm(absolute_mean ~ treatment.x + age + exercise, data = joined_data) %>% summary
 1.  Using their unique donor IDs, how many patients appear across all four arms of the study?
 
 ```{r}
-Haoling
+common_donorid<-ca_co_genotypes |> 
+  filter(
+    donorid %in% gait_data$donorid
+  )
+nrow(common_donorid)
+#there are 16 patients appear across all four arms of the study
 ```
 
 2.  Do any variables other than gene expression distinguish the RNA-seq cases from controls? (Hint: try colouring points on your MDS plot by other information you have about the donors, from the other datasets)
@@ -559,11 +581,11 @@ Winnie
 4.  Is there any relationship between the PRS and gait of patients in the clinical trial?
 
 ```{r}
-Haoling
+Haoliang
 ```
 
 5.  In a paragraph, summarise your findings and suggest directions for future research.
 
 ```{r}
-Haoling
+Haoliang
 ```
