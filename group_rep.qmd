@@ -217,9 +217,7 @@ ggplot(ma_plot_data_fct, aes(x = logFC, y = -log10(p_value), col = status)) +
 
 ```{r}
 #Now we want to check that our samples group together as we'd expect based on our experimental design, by making an MDS plot. This will show us whether or not the controls group together, and the PD patients group together. To do this, we will use the plotMDS() function and then make the MDS plot in ggplot2
-plotMDS(dge, labels = dge$samples$group)
 
-mds_result <- plotMDS(dge)
 #create tibble
 mds_tibble <- tibble(
   x = mds_result$x,
@@ -237,7 +235,7 @@ ggplot(data = mds_tibble,
     x = paste0("Leading logFC dim 1 (", dim1_var_explained, "%)"),
     y = paste0("Leading logFC dim 2 (", dim2_var_explained, "%)")
   )
-#IMPROVE PLOT
+#IMPROVE PLOT, add title, cleanup key
 # From this plot we can see that 5/8 of the PD patient groups cluster to the left of the map, while the other 3 PD patients cluster with the 8 control cases
 ```
 
