@@ -10,11 +10,11 @@ Load dataset:
 
 ```{r}
 library(tidyverse)
-drugscreen <- load("~/Desktop/biol90042_group_rep/drugscreen.Rda")
-gait<- load("~/Desktop/biol90042_group_rep/gait.Rda")
-prs<- load("~/Desktop/biol90042_group_rep/prs.Rda")
-rnaseq<- load("~/Desktop/biol90042_group_rep/rnaseq.Rda")
-rnaseq_gene_info<- load("~/Desktop/biol90042_group_rep/rnaseq_gene_info.Rda")
+drugscreen <- load("../group3_data/drugscreen.Rda")
+gait<- load("../group3_data/gait.Rda")
+prs<- load("../group3_data/prs.Rda")
+rnaseq<- load("../group3_data/rnaseq.Rda")
+rnaseq_gene_info<- load("../group3_data/rnaseq_gene_info.Rda")
 ```
 
 ### **23.3.1 Population genetics**
@@ -32,7 +32,8 @@ PRS_filtered |>
   slice_max(PRS, n=1) #participant with the highest PRS
 PRS_filtered |> 
   slice_min(PRS, n=1) #participant with the lowest PRS
-
+#the participant with the highest PRS is 2.55 and the donorID is d210
+#the participant with the lowest PRS is 0.194 and the donorID is d291
 ```
 
 2.  Plot and describe (with descriptive statistics) the distribution of PRS for both cases and controls.
@@ -60,7 +61,9 @@ ggplot(
     )+
   theme_minimal()+ #to minimize background, look better
   theme(legend.position="none") #because each panel is already labelled with case and control, so having the legend is meaningless, therefore it is removed
-
+#control is more positively skewed where the case is more centred
+#the mean and median PRS valua is higher compare in the control group and slightly higher standard deviation which means a bit more variation in case PRS value
+#case group have a little higher minimum PRS value compare to control, however, their maximum PRS value is similar, this means it is hard to distinguish case from control using the PRS value alone 
 ```
 
 3.  Is there a statistically significant difference in the PRS of cases and controls? Ensure you check all the assumptions of the test you choose.
@@ -374,20 +377,159 @@ question3_results <- t_test_results |>
 
 1.  Plot each participants’ gait data and describe it using descriptive statistics. Which of these descriptive statistics do you think is most useful for capturing the overall gait smoothness and balance of a participant?
 
+The participants' mean gait measurements across the 700 seconds ranges from approximately -0.91° to 0.78°, showing that on average, their orientations are close to upright (0°). The median measurements, ranging from approximately -1.40° to 0.49°, also indicate this. However, because the individual measurements range from approximately -50° to 61°, it shows that some measurements deviate considerably from upright (0°) in both directions. Additionally, the standard deviations range from approximately 2° to 17°, indicating that the gait measurements vary considerably across the 700 seconds.
+
+Absolute mean gait measurements range from approximately 2° to 14°, indicating that the average magnitude of deviation from upright is greater than the mean values suggest. This is because absolute mean accounts for the magnitude of deviations regardless of direction and prevents positive and negative values to cancel each other, as can happen with mean calculations. Therefore, this statistic is most useful for capturing the overall gait smoothness and balance. It also best reflects the differences observed in the plots. For example, participant d056 has the highest absolute mean (approximately 14°) and appears to show the greatest deviation from 0° in their plot. However, absolute mean only measures the average magnitude of deviation from upright and does not directly show how smoothly participants' gait changes across the 700 seconds.
+
 ```{r}
+
+load("~/Desktop/group3_data/gait.Rda")
+View(gait_data)
+
+#check for missing data
+any(is.na(gait_data))
+
+
+# carry out data wrangling to make plotting and calculations easier 
+
+# Reshape into longer data by moving the 700 seconds columns into a single column 
+
+gait_long <- gait_data |> 
+  pivot_longer(
+    cols = contains("_sec"), 
+    names_to = "time", 
+    values_to = "gait"
+  )   
+ 
+  
+  # separate values in "time" column from units and make them into numeric character
+  
+gait_long <- gait_long |>  separate(
+    time, 
+    into = c("time", "units"), 
+    sep = "_"
+  ) 
+  
+gait_long <- gait_long |>  mutate(time = as.numeric(time)) 
+  class(gait_long$time)
+
+
+# plot each participant's gait measurements across the 700 seconds
+# horizontal line at 0 represents perfectly upright orientation
+
+ggplot( gait_long, aes(x = time, y= gait)) +
+  geom_line(linewidth = 0.3) + 
+  geom_hline(yintercept = 0, colour = "blue") + 
+  facet_wrap(~ donorid) +
+  labs(
+    x = "Time (seconds)",
+    y = "Vertical orientation (degrees off-axis)",
+    title = "Gait orientation over time for each participant"
+  )
+
+
+#calculate descriptive statistics for all participants
+
+gait_summary <- gait_long |> 
+  group_by(donorid, treatment) |> 
+  summarise(
+    mean_gait = mean(gait),
+    median_gait = median(gait), 
+    stand.dev_gait = sd(gait),
+    min_gait = min(gait),
+    max_gait = max(gait),
+    absolute_mean = mean(abs(gait))
+    
+  ) |>  
+  ungroup()
+  
+View(gait_summary)
+
 
 ```
 
 2.  Is there a statistically significant difference in gait between participants receiving L-DOPA and the new compound? Ensure that you check your assumptions.
 
+The p value (0.03503) is smaller than 0.05, suggesting that there is a statistically significant difference in the absolute mean gait between participants receiving L-DOPA and the new compound. The new compound group has a lower absolute mean gait (5.699946°) than the L-DOPA group (8.762259°), suggesting a smaller average deviation from upright in this group. This indicates that participants receiving the new compound have gait measurements that are, on average, closer to upright, regardless of direction.
+
 ```{r}
 
+# Check assumptions for t-test:
+
+
+# 1. visualise data and check for equal variances between the 2 treatment groups
+
+ggplot(gait_summary, aes(x = treatment, y = absolute_mean)) +
+  geom_boxplot() 
+
+
+# 2. check for normality in both groups
+
+ggplot(gait_summary, aes(sample = absolute_mean)) +
+  geom_qq() +
+  geom_qq_line() +
+  facet_wrap(~treatment)
+  
+# confirm with a Shapiro-Wilk test in both groups
+
+gait_summary %>%
+  filter(treatment == "L-DOPA control") %>%
+  pull(absolute_mean) %>% 
+  shapiro.test()
+
+gait_summary %>%
+  filter(treatment == "New compound") %>%
+  pull(absolute_mean) %>% 
+  shapiro.test()
+
+# p-values are 0.1284 for L-DOPA group and 0.5617 for New compound group 
+# both are greater than 0.05, so insufficient evidence to reject normality
+
+
+
+# conduct Welch’s t-test 
+
+t.test(absolute_mean ~ treatment, data = gait_summary, var.equal = FALSE)
 ```
 
 3.  Does either of age or the exercise regime affect gait? If so, take this into consideration when investigating the relationship between the treatment and gait.
 
+Linear regression modelling shows that there is a significant positive association between age and absolute mean gait (coefficient= 0.272, p = 0.00322) , suggesting that older participants tend to have greater deviations from upright. Exercise is also significantly associated with absolute mean gait (coefficient= -3.0961, p= 0.0321), with participants in the exercise group showing lower average deviations from upright than those who did not exercise.
+
+After adjusting for age and exercise when investigating the relationship between the treatment and gait, the new compound group has an absolute mean gait 2.6922° lower than the L-DOPA group (coefficient= 2.6922, p = 0.000123). This suggests that absolute mean gait remains statistically different between both treatment groups even after accounting for age and exercise.
+
 ```{r}
 
+
+# join gait_summary and  gait_data to include age and excercise information too
+  
+ joined_data <-  left_join( gait_summary , gait_data , 
+             by = join_by(donorid)
+    
+  )
+
+View(joined_data)
+
+# 1. check relationship between gait and treatment
+
+lm(absolute_mean ~ treatment.x, data = joined_data) %>% summary()
+
+# 2. check relationship between gait and age 
+
+lm(absolute_mean ~ age, data = joined_data) %>% summary()
+
+
+# 3. check relationship between gait and exercise 
+
+lm(absolute_mean ~ exercise, data = joined_data) %>% summary()
+
+# 4. check relationship between gait and treatment after accounting for age
+
+lm(absolute_mean ~ treatment.x + age, data = joined_data) %>% summary()
+
+# 5. check relationship between gait and treatment after accounting for age and exercise
+
+lm(absolute_mean ~ treatment.x + age + exercise, data = joined_data) %>% summary()
 ```
 
 ### **23.3.5 Bringing it together/linking between datasets**
