@@ -633,7 +633,7 @@ Attaching package: 'R.utils'</code></pre>
 <span id="cb110-3"><a href="#cb110-3" aria-hidden="true" tabindex="-1"></a>vfit <span class="ot">&lt;-</span> <span class="fu">contrasts.fit</span>(vfit, <span class="at">contrasts =</span> contr_matrix)</span>
 <span id="cb110-4"><a href="#cb110-4" aria-hidden="true" tabindex="-1"></a><span class="co">#statistical test</span></span>
 <span id="cb110-5"><a href="#cb110-5" aria-hidden="true" tabindex="-1"></a>efit <span class="ot">&lt;-</span> <span class="fu">eBayes</span>(vfit)</span>
-<span id="cb110-6"><a href="#cb110-6" aria-hidden="true" tabindex="-1"></a><span class="co">#decide tests functin to decide if a gene is differentially expressed or not</span></span>
+<span id="cb110-6"><a href="#cb110-6" aria-hidden="true" tabindex="-1"></a><span class="co">#decide tests function to decide if a gene is differentially expressed or not</span></span>
 <span id="cb110-7"><a href="#cb110-7" aria-hidden="true" tabindex="-1"></a>dt <span class="ot">&lt;-</span> <span class="fu">decideTests</span>(efit)</span>
 <span id="cb110-8"><a href="#cb110-8" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(dt)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
@@ -646,12 +646,89 @@ Up                20</code></pre>
 <span id="cb112-2"><a href="#cb112-2" aria-hidden="true" tabindex="-1"></a><span class="co">#converted to tibble to make it easier to work with</span></span>
 <span id="cb112-3"><a href="#cb112-3" aria-hidden="true" tabindex="-1"></a>top_tibble <span class="ot">&lt;-</span> <span class="fu">as_tibble</span>(top)</span>
 <span id="cb112-4"><a href="#cb112-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb112-5"><a href="#cb112-5" aria-hidden="true" tabindex="-1"></a><span class="co">#MA plot</span></span>
-<span id="cb112-6"><a href="#cb112-6" aria-hidden="true" tabindex="-1"></a>limma<span class="sc">::</span><span class="fu">plotMA</span>(efit, <span class="at">coef =</span> <span class="st">"CasevsControl"</span>, <span class="at">status =</span> dt[, <span class="st">"CasevsControl"</span>])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb112-5"><a href="#cb112-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb112-6"><a href="#cb112-6" aria-hidden="true" tabindex="-1"></a><span class="co">#MA plot</span></span>
+<span id="cb112-7"><a href="#cb112-7" aria-hidden="true" tabindex="-1"></a>limma<span class="sc">::</span><span class="fu">plotMA</span>(efit, <span class="at">coef =</span> <span class="st">"CasevsControl"</span>, <span class="at">status =</span> dt[, <span class="st">"CasevsControl"</span>])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
 <p><img src="group_rep_files/figure-html/unnamed-chunk-6-2.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb113"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb113-1"><a href="#cb113-1" aria-hidden="true" tabindex="-1"></a><span class="do">##ggplot MA plot</span></span>
+<span id="cb113-2"><a href="#cb113-2" aria-hidden="true" tabindex="-1"></a><span class="co">#first need to assign gene names to the efit$genes dataframe</span></span>
+<span id="cb113-3"><a href="#cb113-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb113-4"><a href="#cb113-4" aria-hidden="true" tabindex="-1"></a><span class="co">#turning efit$genes into character</span></span>
+<span id="cb113-5"><a href="#cb113-5" aria-hidden="true" tabindex="-1"></a>efit<span class="sc">$</span>genes<span class="sc">$</span>genes <span class="ot">&lt;-</span> <span class="fu">as.character</span>(efit<span class="sc">$</span>genes<span class="sc">$</span>genes)</span>
+<span id="cb113-6"><a href="#cb113-6" aria-hidden="true" tabindex="-1"></a><span class="co">#so I can now change efit$genes to include SYMBOL column which matches the entrez_genename_key#entrezid to efit$genes$genes, and supplies the entrez_genename_key$gene_name to the efit$genes dataframe</span></span>
+<span id="cb113-7"><a href="#cb113-7" aria-hidden="true" tabindex="-1"></a>efit<span class="sc">$</span>genes<span class="sc">$</span>SYMBOL <span class="ot">&lt;-</span> entrez_genename_key<span class="sc">$</span>gene_name[</span>
+<span id="cb113-8"><a href="#cb113-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">match</span>(efit<span class="sc">$</span>genes<span class="sc">$</span>genes, entrez_genename_key<span class="sc">$</span>entrezid)]</span>
+<span id="cb113-9"><a href="#cb113-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb113-10"><a href="#cb113-10" aria-hidden="true" tabindex="-1"></a><span class="co">#now organise fata from efit into a tibble format</span></span>
+<span id="cb113-11"><a href="#cb113-11" aria-hidden="true" tabindex="-1"></a>ma_plot_data <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">logFC =</span> efit<span class="sc">$</span>coefficients[, <span class="st">"CasevsControl"</span>],</span>
+<span id="cb113-12"><a href="#cb113-12" aria-hidden="true" tabindex="-1"></a>                       <span class="at">AvgExpr =</span> efit<span class="sc">$</span>Amean,</span>
+<span id="cb113-13"><a href="#cb113-13" aria-hidden="true" tabindex="-1"></a>                       <span class="at">status =</span> <span class="fu">factor</span>(<span class="fu">as.numeric</span>(dt[, <span class="st">"CasevsControl"</span>])),</span>
+<span id="cb113-14"><a href="#cb113-14" aria-hidden="true" tabindex="-1"></a>                       <span class="at">gene =</span> efit<span class="sc">$</span>genes<span class="sc">$</span>SYMBOL,</span>
+<span id="cb113-15"><a href="#cb113-15" aria-hidden="true" tabindex="-1"></a>                       <span class="at">p_value =</span> efit<span class="sc">$</span>p.value[, <span class="st">"CasevsControl"</span>])</span>
+<span id="cb113-16"><a href="#cb113-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb113-17"><a href="#cb113-17" aria-hidden="true" tabindex="-1"></a>ma_plot_data_fct <span class="ot">&lt;-</span> ma_plot_data <span class="sc">%&gt;%</span></span>
+<span id="cb113-18"><a href="#cb113-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb113-19"><a href="#cb113-19" aria-hidden="true" tabindex="-1"></a>    <span class="co"># replace status with a new factor</span></span>
+<span id="cb113-20"><a href="#cb113-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">status =</span> <span class="fu">factor</span>(</span>
+<span id="cb113-21"><a href="#cb113-21" aria-hidden="true" tabindex="-1"></a>      status,</span>
+<span id="cb113-22"><a href="#cb113-22" aria-hidden="true" tabindex="-1"></a>      <span class="co"># levels (order is not DE, down, up)</span></span>
+<span id="cb113-23"><a href="#cb113-23" aria-hidden="true" tabindex="-1"></a>      <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="sc">-</span><span class="dv">1</span>, <span class="dv">1</span>),</span>
+<span id="cb113-24"><a href="#cb113-24" aria-hidden="true" tabindex="-1"></a>      <span class="co"># labels for the numbers so they are readble</span></span>
+<span id="cb113-25"><a href="#cb113-25" aria-hidden="true" tabindex="-1"></a>      <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"Not DE"</span>, <span class="st">"Down"</span>, <span class="st">"Up"</span>)</span>
+<span id="cb113-26"><a href="#cb113-26" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb113-27"><a href="#cb113-27" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb113-28"><a href="#cb113-28" aria-hidden="true" tabindex="-1"></a><span class="co">#labelling of top most significant genes</span></span>
+<span id="cb113-29"><a href="#cb113-29" aria-hidden="true" tabindex="-1"></a>top_de_genes <span class="ot">&lt;-</span> ma_plot_data_fct <span class="sc">%&gt;%</span></span>
+<span id="cb113-30"><a href="#cb113-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_min</span>(<span class="at">n =</span> <span class="dv">15</span>, p_value)</span>
+<span id="cb113-31"><a href="#cb113-31" aria-hidden="true" tabindex="-1"></a><span class="co">#colours to label points by</span></span>
+<span id="cb113-32"><a href="#cb113-32" aria-hidden="true" tabindex="-1"></a>scale_cols <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb113-33"><a href="#cb113-33" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Not DE"</span> <span class="ot">=</span> <span class="st">"black"</span>,</span>
+<span id="cb113-34"><a href="#cb113-34" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Down"</span> <span class="ot">=</span> <span class="st">"#1a0099"</span>,</span>
+<span id="cb113-35"><a href="#cb113-35" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Up"</span> <span class="ot">=</span> <span class="st">"#990000"</span></span>
+<span id="cb113-36"><a href="#cb113-36" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb113-37"><a href="#cb113-37" aria-hidden="true" tabindex="-1"></a><span class="co">#MA ggplot</span></span>
+<span id="cb113-38"><a href="#cb113-38" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(ma_plot_data_fct, <span class="fu">aes</span>(<span class="at">x =</span> AvgExpr, <span class="at">y =</span> logFC, <span class="at">col =</span> status)) <span class="sc">+</span></span>
+<span id="cb113-39"><a href="#cb113-39" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">data =</span> ma_plot_data_fct <span class="sc">%&gt;%</span> <span class="fu">filter</span>(status <span class="sc">==</span> <span class="st">"Not DE"</span>), <span class="at">size =</span> <span class="fl">0.1</span>) <span class="sc">+</span></span>
+<span id="cb113-40"><a href="#cb113-40" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">data =</span> ma_plot_data_fct <span class="sc">%&gt;%</span> <span class="fu">filter</span>(status <span class="sc">!=</span> <span class="st">"Not DE"</span>), <span class="at">size =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb113-41"><a href="#cb113-41" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_label_repel</span>(</span>
+<span id="cb113-42"><a href="#cb113-42" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> top_de_genes,</span>
+<span id="cb113-43"><a href="#cb113-43" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">label =</span> gene, <span class="at">col =</span> <span class="cn">NULL</span>),</span>
+<span id="cb113-44"><a href="#cb113-44" aria-hidden="true" tabindex="-1"></a>    <span class="at">max.overlaps =</span> <span class="dv">20</span>,</span>
+<span id="cb113-45"><a href="#cb113-45" aria-hidden="true" tabindex="-1"></a>    <span class="at">show.legend =</span> <span class="cn">FALSE</span></span>
+<span id="cb113-46"><a href="#cb113-46" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb113-47"><a href="#cb113-47" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_manual</span>(<span class="at">values =</span> scale_cols) <span class="sc">+</span> </span>
+<span id="cb113-48"><a href="#cb113-48" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_classic</span>() <span class="sc">+</span></span>
+<span id="cb113-49"><a href="#cb113-49" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"MA plot for Case vs Control"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="group_rep_files/figure-html/unnamed-chunk-6-3.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb114"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb114-1"><a href="#cb114-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Volcano Plot</span></span>
+<span id="cb114-2"><a href="#cb114-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(ma_plot_data_fct, <span class="fu">aes</span>(<span class="at">x =</span> logFC, <span class="at">y =</span> <span class="sc">-</span><span class="fu">log10</span>(p_value), <span class="at">col =</span> status)) <span class="sc">+</span></span>
+<span id="cb114-3"><a href="#cb114-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">data =</span> ma_plot_data_fct <span class="sc">%&gt;%</span> <span class="fu">filter</span>(status <span class="sc">==</span> <span class="st">"Not DE"</span>), <span class="at">size =</span> <span class="fl">0.1</span>) <span class="sc">+</span></span>
+<span id="cb114-4"><a href="#cb114-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">data =</span> ma_plot_data_fct <span class="sc">%&gt;%</span> <span class="fu">filter</span>(status <span class="sc">!=</span> <span class="st">"Not DE"</span>), <span class="at">size =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb114-5"><a href="#cb114-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_label_repel</span>(</span>
+<span id="cb114-6"><a href="#cb114-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> top_de_genes,</span>
+<span id="cb114-7"><a href="#cb114-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">label =</span> gene, <span class="at">col =</span> <span class="cn">NULL</span>),</span>
+<span id="cb114-8"><a href="#cb114-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">max.overlaps =</span> <span class="dv">20</span>,</span>
+<span id="cb114-9"><a href="#cb114-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">show.legend =</span> <span class="cn">FALSE</span></span>
+<span id="cb114-10"><a href="#cb114-10" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb114-11"><a href="#cb114-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_manual</span>(<span class="at">values =</span> scale_cols) <span class="sc">+</span> </span>
+<span id="cb114-12"><a href="#cb114-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_classic</span>() <span class="sc">+</span></span>
+<span id="cb114-13"><a href="#cb114-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Volcano plot for Case Vs Control"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="group_rep_files/figure-html/unnamed-chunk-6-4.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -663,8 +740,8 @@ Up                20</code></pre>
 <li>Is the clustering of samples by gene expression consistent with their disease status as cases and controls?</li>
 </ol>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb113"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb113-1"><a href="#cb113-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Now we want to check that our samples group together as we'd expect based on our experimental design, by making an MDS plot. This will show us whether or not the controls group together, and the PD patients group together. To do this, we will use the plotMDS() function and then make the MDS plot in ggplot2</span></span>
-<span id="cb113-2"><a href="#cb113-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plotMDS</span>(dge, <span class="at">labels =</span> dge<span class="sc">$</span>samples<span class="sc">$</span>group)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb115"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb115-1"><a href="#cb115-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Now we want to check that our samples group together as we'd expect based on our experimental design, by making an MDS plot. This will show us whether or not the controls group together, and the PD patients group together. To do this, we will use the plotMDS() function and then make the MDS plot in ggplot2</span></span>
+<span id="cb115-2"><a href="#cb115-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plotMDS</span>(dge, <span class="at">labels =</span> dge<span class="sc">$</span>samples<span class="sc">$</span>group)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -672,7 +749,7 @@ Up                20</code></pre>
 </figure>
 </div>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb114"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb114-1"><a href="#cb114-1" aria-hidden="true" tabindex="-1"></a>mds_result <span class="ot">&lt;-</span> <span class="fu">plotMDS</span>(dge)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb116"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb116-1"><a href="#cb116-1" aria-hidden="true" tabindex="-1"></a>mds_result <span class="ot">&lt;-</span> <span class="fu">plotMDS</span>(dge)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -680,23 +757,23 @@ Up                20</code></pre>
 </figure>
 </div>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb115"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb115-1"><a href="#cb115-1" aria-hidden="true" tabindex="-1"></a><span class="co">#create tibble</span></span>
-<span id="cb115-2"><a href="#cb115-2" aria-hidden="true" tabindex="-1"></a>mds_tibble <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
-<span id="cb115-3"><a href="#cb115-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">x =</span> mds_result<span class="sc">$</span>x,</span>
-<span id="cb115-4"><a href="#cb115-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">y =</span> mds_result<span class="sc">$</span>y,</span>
-<span id="cb115-5"><a href="#cb115-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">sample =</span> <span class="fu">colnames</span>(dge),</span>
-<span id="cb115-6"><a href="#cb115-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">group =</span> dge<span class="sc">$</span>samples<span class="sc">$</span>group</span>
-<span id="cb115-7"><a href="#cb115-7" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb115-8"><a href="#cb115-8" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
-<span id="cb115-9"><a href="#cb115-9" aria-hidden="true" tabindex="-1"></a>dim1_var_explained <span class="ot">&lt;-</span> <span class="fu">round</span>(mds_result<span class="sc">$</span>var.explained[<span class="dv">1</span>] <span class="sc">*</span> <span class="dv">100</span>)</span>
-<span id="cb115-10"><a href="#cb115-10" aria-hidden="true" tabindex="-1"></a>dim2_var_explained <span class="ot">&lt;-</span> <span class="fu">round</span>(mds_result<span class="sc">$</span>var.explained[<span class="dv">2</span>] <span class="sc">*</span> <span class="dv">100</span>)</span>
-<span id="cb115-11"><a href="#cb115-11" aria-hidden="true" tabindex="-1"></a><span class="co">#create ggplot</span></span>
-<span id="cb115-12"><a href="#cb115-12" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="at">data =</span> mds_tibble,</span>
-<span id="cb115-13"><a href="#cb115-13" aria-hidden="true" tabindex="-1"></a>       <span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> y, <span class="at">colour =</span> group)) <span class="sc">+</span> <span class="fu">geom_point</span>() <span class="sc">+</span> <span class="fu">geom_text_repel</span>(<span class="fu">aes</span>(<span class="at">label =</span> sample)) <span class="sc">+</span></span>
-<span id="cb115-14"><a href="#cb115-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
-<span id="cb115-15"><a href="#cb115-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="fu">paste0</span>(<span class="st">"Leading logFC dim 1 ("</span>, dim1_var_explained, <span class="st">"%)"</span>),</span>
-<span id="cb115-16"><a href="#cb115-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="fu">paste0</span>(<span class="st">"Leading logFC dim 2 ("</span>, dim2_var_explained, <span class="st">"%)"</span>)</span>
-<span id="cb115-17"><a href="#cb115-17" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb117"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb117-1"><a href="#cb117-1" aria-hidden="true" tabindex="-1"></a><span class="co">#create tibble</span></span>
+<span id="cb117-2"><a href="#cb117-2" aria-hidden="true" tabindex="-1"></a>mds_tibble <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb117-3"><a href="#cb117-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">x =</span> mds_result<span class="sc">$</span>x,</span>
+<span id="cb117-4"><a href="#cb117-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">y =</span> mds_result<span class="sc">$</span>y,</span>
+<span id="cb117-5"><a href="#cb117-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">sample =</span> <span class="fu">colnames</span>(dge),</span>
+<span id="cb117-6"><a href="#cb117-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">group =</span> dge<span class="sc">$</span>samples<span class="sc">$</span>group</span>
+<span id="cb117-7"><a href="#cb117-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb117-8"><a href="#cb117-8" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb117-9"><a href="#cb117-9" aria-hidden="true" tabindex="-1"></a>dim1_var_explained <span class="ot">&lt;-</span> <span class="fu">round</span>(mds_result<span class="sc">$</span>var.explained[<span class="dv">1</span>] <span class="sc">*</span> <span class="dv">100</span>)</span>
+<span id="cb117-10"><a href="#cb117-10" aria-hidden="true" tabindex="-1"></a>dim2_var_explained <span class="ot">&lt;-</span> <span class="fu">round</span>(mds_result<span class="sc">$</span>var.explained[<span class="dv">2</span>] <span class="sc">*</span> <span class="dv">100</span>)</span>
+<span id="cb117-11"><a href="#cb117-11" aria-hidden="true" tabindex="-1"></a><span class="co">#create ggplot</span></span>
+<span id="cb117-12"><a href="#cb117-12" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="at">data =</span> mds_tibble,</span>
+<span id="cb117-13"><a href="#cb117-13" aria-hidden="true" tabindex="-1"></a>       <span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> y, <span class="at">colour =</span> group)) <span class="sc">+</span> <span class="fu">geom_point</span>() <span class="sc">+</span> <span class="fu">geom_text_repel</span>(<span class="fu">aes</span>(<span class="at">label =</span> sample)) <span class="sc">+</span></span>
+<span id="cb117-14"><a href="#cb117-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb117-15"><a href="#cb117-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="fu">paste0</span>(<span class="st">"Leading logFC dim 1 ("</span>, dim1_var_explained, <span class="st">"%)"</span>),</span>
+<span id="cb117-16"><a href="#cb117-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="fu">paste0</span>(<span class="st">"Leading logFC dim 2 ("</span>, dim2_var_explained, <span class="st">"%)"</span>)</span>
+<span id="cb117-17"><a href="#cb117-17" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -704,8 +781,8 @@ Up                20</code></pre>
 </figure>
 </div>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb116"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb116-1"><a href="#cb116-1" aria-hidden="true" tabindex="-1"></a><span class="co">#IMPROVE PLOT</span></span>
-<span id="cb116-2"><a href="#cb116-2" aria-hidden="true" tabindex="-1"></a><span class="co"># From this plot we can see that 5/8 of the PD patient groups cluster to the left of the map, while the other 3 PD patients cluster with the 8 control cases</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb118"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb118-1"><a href="#cb118-1" aria-hidden="true" tabindex="-1"></a><span class="co">#IMPROVE PLOT</span></span>
+<span id="cb118-2"><a href="#cb118-2" aria-hidden="true" tabindex="-1"></a><span class="co"># From this plot we can see that 5/8 of the PD patient groups cluster to the left of the map, while the other 3 PD patients cluster with the 8 control cases</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="drug-screening" class="level3">

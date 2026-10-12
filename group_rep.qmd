@@ -10,11 +10,11 @@ Load dataset:
 
 ```{r}
 library(tidyverse)
-drugscreen <- load("~/Desktop/biol90042_group_rep/drugscreen.Rda")
-gait<- load("~/Desktop/biol90042_group_rep/gait.Rda")
-prs<- load("~/Desktop/biol90042_group_rep/prs.Rda")
-rnaseq<- load("~/Desktop/biol90042_group_rep/rnaseq.Rda")
-rnaseq_gene_info<- load("~/Desktop/biol90042_group_rep/rnaseq_gene_info.Rda")
+drugscreen <- load("../group3_data/drugscreen.Rda")
+gait<- load("../group3_data/gait.Rda")
+prs<- load("../group3_data/prs.Rda")
+rnaseq<- load("../group3_data/rnaseq.Rda")
+rnaseq_gene_info<- load("../group3_data/rnaseq_gene_info.Rda")
 ```
 
 ### **23.3.1 Population genetics**
@@ -32,7 +32,7 @@ PRS_filtered |>
   slice_max(PRS, n=1) #participant with the highest PRS
 PRS_filtered |> 
   slice_min(PRS, n=1) #participant with the lowest PRS
-
+#add explanation
 ```
 
 2.  Plot and describe (with descriptive statistics) the distribution of PRS for both cases and controls.
@@ -60,7 +60,8 @@ ggplot(
     )+
   theme_minimal()+ #to minimize background, look better
   theme(legend.position="none") #because each panel is already labelled with case and control, so having the legend is meaningless, therefore it is removed
-
+#control is more positively skewed where the case is more centred
+#add explanation
 ```
 
 3.  Is there a statistically significant difference in the PRS of cases and controls? Ensure you check all the assumptions of the test you choose.
