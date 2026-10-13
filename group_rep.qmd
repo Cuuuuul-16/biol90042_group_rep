@@ -10,11 +10,11 @@ Load dataset:
 
 ```{r}
 library(tidyverse)
-drugscreen <- load("../group3_data/drugscreen.Rda")
-gait<- load("../group3_data/gait.Rda")
-prs<- load("../group3_data/prs.Rda")
-rnaseq<- load("../group3_data/rnaseq.Rda")
-rnaseq_gene_info<- load("../group3_data/rnaseq_gene_info.Rda")
+drugscreen <- load("~/Desktop/biol90042_group_rep/drugscreen.Rda")
+gait<- load("~/Desktop/biol90042_group_rep/gait.Rda")
+prs<- load("~/Desktop/biol90042_group_rep/prs.Rda")
+rnaseq<- load("~/Desktop/biol90042_group_rep/rnaseq.Rda")
+rnaseq_gene_info<- load("~/Desktop/biol90042_group_rep/rnaseq_gene_info.Rda")
 ```
 
 ### **23.3.1 Population genetics**
@@ -373,12 +373,19 @@ t_test_results |>
 
 3.  What are the mechanisms of action and targets of the compounds you identify in Q2?
 
+- cmpd_5118 – LRP6: Agonist; co-receptor in canonical Wnt/Beta-catenin signalling.
+
+- cmpd_5386 – MAPK1: Agonist(according to the dataset); protein kinase involved in MAPK/ERK signalling; regulates cell signalling, proliferation, differentiation and survival.
+
+-  cmpd_7466 – RIT2: Agonist; Neuron-associated small GTPase involved in intracellular signalling. RIT2 has been associated with Parkinson's disease susceptibility.
+
+- cmpd_6972 – APBA3: Agnoist; Adaptor protein that interacts with amyloid precursor protein.
+
 ```{r}
 # Find the target and mechanism of action for the significant compounds.
 compound_dict |> 
   filter(id %in% c("cmpd_5386", "cmpd_5118", "cmpd_7466", "cmpd_6972"))
 
-# NOT SURE IF BELOW IS NECESSARY:
 # Combine significant compounds with their targets and mechanisms of action.
 question3_results <- t_test_results |> 
   filter(p_adjusted < 0.05, difference > 0) |> 
@@ -569,7 +576,15 @@ Mac
 3.  Are any of the gene targets of hit compounds from the drug screen, differentially expressed in RNA-seq? Which GO terms are they associated with and what might this tell you about the pathology of PD?
 
 ```{r}
-Winnie
+ma_plot_data_fct |> 
+  filter(gene %in% c("MAPK1", "LRP6", "RIT2", "APBA3"))
+# Find the Entrez IDs for the four hit target genes
+targeted_genes <- entrez_genename_key |> 
+  filter(gene_name %in% c("MAPK1", "LRP6", "RIT2", "APBA3"))
+
+target_go <- gene_ontology |> 
+  filter(entrezgene_id %in% targeted_genes$entrezid)
+View(target_go)
 ```
 
 4.  Is there any relationship between the PRS and gait of patients in the clinical trial?
