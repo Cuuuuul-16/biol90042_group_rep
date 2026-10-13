@@ -575,6 +575,9 @@ Winnie
 4.  Is there any relationship between the PRS and gait of patients in the clinical trial?
 
 ```{r}
+find("select")
+select <- dplyr::select#maybe due to laptop issue, find("select") [1] "package:OrganismDbi"   "package:AnnotationDbi" "package:dplyr"   
+
 gait_PRS<-gait_summary |> 
   select(donorid, absolute_mean, mean_gait) |> 
   left_join(
