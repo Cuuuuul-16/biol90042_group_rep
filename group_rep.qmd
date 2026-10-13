@@ -575,8 +575,35 @@ Winnie
 4.  Is there any relationship between the PRS and gait of patients in the clinical trial?
 
 ```{r}
-Haoliang
+gait_PRS<-gait_summary |> 
+  select(donorid, absolute_mean, mean_gait) |> 
+  left_join(
+    gait_data |> 
+      select(donorid, treatment, age, exercise),
+    by=join_by(donorid)
+  ) |> 
+  left_join(
+    PRS |> 
+      select(donorid, status, Polygenic_risk_score),
+    by=join_by(donorid)
+  )
 
+ggplot(
+  gait_PRS, aes(x=Polygenic_risk_score, y=absolute_mean, colour=treatment)
+)+
+  geom_point()+
+  geom_smooth(method="lm")
+#linear regression, labs need to be added later
+
+#pearson correlation test is applied
+cor.test(gait_PRS$Polygenic_risk_score, gait_PRS$absolute_mean)
+wilcox.test(Polygenic_risk_score~treatment, data=gait_PRS)
+cor.test(gait_PRS$Polygenic_risk_score, gait_PRS$age)
+wilcox.test(Polygenic_risk_score~exercise, data=gait_PRS)
+
+summary(lm(absolute_mean~Polygenic_risk_score+treatment+age+exercise, data=gait_PRS))#whether PRS is associated with gait after adjusting for treatment, age and exercise
+
+#assumption for linear model has not been finished
 ```
 
 5.  In a paragraph, summarise your findings and suggest directions for future research.
