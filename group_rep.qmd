@@ -104,7 +104,7 @@ PRS |>
 #for ctrl, the p value is 0.007452, strong evidence against normality
 #to do a t-test, both group need to meet the normality assumption, since the ctrl group has violated the assumption, Wilcoxon rank-sum test will be applied here to compare the two groups instead of t-test.
 wilcox.test(Polygenic_risk_score~status, data=PRS)
-#the wilcoxon test statistics value is 15554 with a p-value of 1.013e-08. This suggests a extremely strong evidence that the PRS distribution differ between the Pakinson disease case group and the control group, with case group have higher PRS compare to the control group
+#the wilcoxon test statistics value is 15554 with a p-value of 1.013e-08. This suggests a extremely strong evidence that the PRS distribution differ between the Pakinson disease case group and the control group, with case group have higher PRS compare to the control group.
 ```
 
 ### **23.3.2 RNA-seq of patient iPSC-derived neurons**
@@ -576,6 +576,7 @@ Winnie
 
 ```{r}
 Haoliang
+
 ```
 
 5.  In a paragraph, summarise your findings and suggest directions for future research.
