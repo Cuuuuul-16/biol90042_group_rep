@@ -611,18 +611,30 @@ ggplot(
   gait_PRS, aes(x=Polygenic_risk_score, y=absolute_mean, colour=treatment)
 )+
   geom_point()+
-  geom_smooth(method="lm")
-#linear regression, labs need to be added later
+  geom_smooth(method="lm")+
+  labs(
+    title = "Relationship between PRS and gait in the clinical trial",
+    x = "Polygenic risk score",
+    y = "Absolute mean deviation from upright",
+    colour = "Treatment"
+  ) +
+  theme_minimal()
+#linear regression
+#L-DOPA control: Higher PRS is associated with greater Absolute mean deviation from upright
+#New compound: Higher PRS is associated with smaller Absolute mean deviation from upright
 
-#pearson correlation test is applied
-cor.test(gait_PRS$Polygenic_risk_score, gait_PRS$absolute_mean)
-wilcox.test(Polygenic_risk_score~treatment, data=gait_PRS)
-cor.test(gait_PRS$Polygenic_risk_score, gait_PRS$age)
-wilcox.test(Polygenic_risk_score~exercise, data=gait_PRS)
+lm_model_PRS_gait<-lm(absolute_mean~Polygenic_risk_score+treatment+age+exercise, data=gait_PRS)
+summary(lm_model_PRS_gait)#After adjusting for treatment, age and exercise, PRS was not significantly associated with mean absolute deviation from upright (β = 0.394 per one-unit increase in PRS, SE = 0.364, p = 0.303). This indicates insufficient evidence of an association, rather than proving that no relationship exists.
 
-summary(lm(absolute_mean~Polygenic_risk_score+treatment+age+exercise, data=gait_PRS))#whether PRS is associated with gait after adjusting for treatment, age and exercise
-
-#assumption for linear model has not been finished
+#assumption for linear model
+library(lmtest)
+plot(lm_model_PRS_gait)#visualise
+#it will be hard to tell if the assumption are met visually, the tests are applied
+resettest(lm_model_PRS_gait)#Linearity: the reset test found no evidence that the model is not linear with p-value equals to 0.7465
+bptest(lm_model_PRS_gait)#Homoscedasticity: The Breusch–Pagan test found no evidence of unequal residual variance (p-value=0.6255)
+shapiro.test(lm_model_PRS_gait$residuals)#Normality of residuals: The Shapiro–Wilk test found no evidence that the residuals are not following a normal distribution (p-value=0.4728)
+#Independence: Each patient contributed one PRS and one gait summary hence there is only one observation per patient, therefore the independence of errors between patients is met which means one patient’s unexplained gait variation should not be related to another patient’s.
+#All four assumptions are met, and hence the liner model for PRS_gait is valid
 ```
 
 5.  In a paragraph, summarise your findings and suggest directions for future research.
