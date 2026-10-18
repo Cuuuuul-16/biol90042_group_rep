@@ -78,7 +78,8 @@ ggplot(
   theme_minimal()+ #to minimize background, look better
   theme(legend.position="none") #because each panel is already labelled with case and control, so having the legend is meaningless, therefore it is removed
 ggplot(PRS, aes(x=status, y=Polygenic_risk_score))+
-  geom_boxplot()
+  geom_boxplot()+
+  theme_minimal()
 #case group have higher mean and median PRS, with slightly greater standard deviation (variation) compare to the control group. The distributions of both group overlap substantially, hence the PRS cannot be perfectly distinguish case from control.
 #both disttibution are unimodal and symmetric, and both have two outliers, case outliers have the lowest PRS and the control outliers have the higher PRS
 ```
@@ -594,7 +595,7 @@ find("select")
 select <- dplyr::select#maybe due to laptop issue, find("select") [1] "package:OrganismDbi"   "package:AnnotationDbi" "package:dplyr"   
 
 gait_PRS<-gait_summary |> 
-  select(donorid, absolute_mean, mean_gait) |> 
+  select(donorid, absolute_mean) |> 
   left_join(
     gait_data |> 
       select(donorid, treatment, age, exercise),
