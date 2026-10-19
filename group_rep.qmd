@@ -22,11 +22,11 @@ rnaseq_gene_info<- load("~/Desktop/biol90042_group_rep/rnaseq_gene_info.Rda")
 1.  Calculate a PRS for each participant. Which participant has the highest PRS? The lowest?
 
 ```{r}
-longer_ca_co_genotypes<-ca_co_genotypes |> 
+longer_ca_co_genotypes <- ca_co_genotypes |> 
   pivot_longer(
-    cols=starts_with("locus_"),
-    names_to="risk_locus",
-    values_to="risk_genotype_dosage"
+    cols = starts_with("locus_"),
+    names_to = "risk_locus",
+    values_to = "risk_genotype_dosage"
   ) |> 
   left_join(
     gwas_top_hits |> 
@@ -34,21 +34,21 @@ longer_ca_co_genotypes<-ca_co_genotypes |>
     by = join_by(risk_locus == locus)
     )
 #make it easier to do following calculation
-One_locus_score<-longer_ca_co_genotypes |> 
+One_locus_score <- longer_ca_co_genotypes |> 
   mutate(
-    one_locus_score=risk_genotype_dosage*beta
+    one_locus_score = risk_genotype_dosage*beta
   ) 
 #calculate the locus score for each individual locus
 PRS<-One_locus_score |> 
   summarise(
-    Polygenic_risk_score=sum(one_locus_score),
+    Polygenic_risk_score = sum(one_locus_score),
     .by = c(donorid, status)
     )
 #calculate the PRS for each participant
 PRS |> 
-  slice_max(Polygenic_risk_score, n=1) #participant with the highest PRS
+  slice_max(Polygenic_risk_score, n = 1) #participant with the highest PRS
 PRS |> 
-  slice_min(Polygenic_risk_score, n=1) #participant with the lowest PRS
+  slice_min(Polygenic_risk_score, n = 1) #participant with the lowest PRS
 #the participant with the highest PRS is 2.389 and the donorID is d249 (control)
 #the participant with the lowest PRS is 0.172 and the donorID is d205 (case)
 ```
@@ -58,28 +58,63 @@ PRS |>
 ```{r}
 PRS |> 
   summarise(
-    min_PRS=min(Polygenic_risk_score),
-    max_PRS=max(Polygenic_risk_score),
-    mean_PRS=mean(Polygenic_risk_score),
-    median_PRS=median(Polygenic_risk_score),
-    sd_PRS=sd(Polygenic_risk_score),
-    .by=status
-  ) #descriptive statistics of the distribution of PRS for both cases and controls
+    min_PRS = min(Polygenic_risk_score),
+    max_PRS = max(Polygenic_risk_score),
+    mean_PRS = mean(Polygenic_risk_score),
+    median_PRS = median(Polygenic_risk_score),
+    sd_PRS = sd(Polygenic_risk_score),
+    .by = status
+  ) # descriptive statistics of the distribution of PRS for both cases and controls
 ggplot(
-  data=PRS,
-  aes(x=Polygenic_risk_score, fill=status))+
-  geom_histogram(bins=15)+ #creating a histogram that range into 15 bars, choose 15 is because it is much smoother compare to bins=30 which is the default, and easier to see overall distribution
-  facet_wrap(~status)+ #make two separate plots based on the status
+  data = PRS,
+  aes(x = Polygenic_risk_score, fill = status))+
+  geom_histogram(bins = 15,
+                 colour = "white",
+                 linewidth = 0.3) + # creating a histogram that range into 15 bars, choose 15 is because it is much smoother compare to bins=30 which is the default, and easier to see overall distribution
+  facet_wrap(~status) + # make two separate plots based on the status
+  scale_fill_manual(
+    values = c("case" = "#D96B5F", "ctrl" = "#4C84A6")
+  ) +
   labs(
-    title="Distribution of PRS for both cases and controls",
-    x="Polygenic risk score",
-    y="Count",
-    )+
-  theme_minimal()+ #to minimize background, look better
-  theme(legend.position="none") #because each panel is already labelled with case and control, so having the legend is meaningless, therefore it is removed
-ggplot(PRS, aes(x=status, y=Polygenic_risk_score))+
-  geom_boxplot()+
-  theme_minimal()
+    title = "Distribution of Polygenic Risk Scores",
+    subtitle = "Parkinson's disease cases and healthy controls",
+    x = "Polygenic risk score (PRS)",
+    y = "Number of participants",
+    ) +
+  theme_classic(base_size = 12) +
+  theme(
+    legend.position = "none", # remove the legend because the groups are already labelled
+    plot.title = element_text(face = "bold", size = 14), # make the main title more prominent
+    plot.subtitle = element_text(size = 10, colour = "grey40"), # smaller, muted subtitle to make visual hierarchy
+    strip.background = element_rect(fill = "grey90"), # add a light grey background to facet labels
+    strip.text = element_text(face = "bold", size = 11), # make facet labels easy to distinguish
+    axis.title = element_text(face = "bold"), # emphasise axis titles
+    axis.text = element_text(colour = "black") # use black axis text for clear contrast
+  )
+
+ggplot(PRS, aes(x = status, y = Polygenic_risk_score, fill = status)) +
+  geom_boxplot(
+    width = 0.5,
+    alpha = 0.85,
+    outlier.shape = 21,
+    outlier.size = 2
+  ) +
+  scale_fill_manual(
+  values = c("case" = "#D96B5F", "ctrl" = "#4C84A6") # set consistent colours for cases and controls
+) +
+labs(
+  title = "Polygenic Risk Scores by Disease Status",
+  x = "Disease status",
+  y = "Polygenic risk score (PRS)"
+) + # add the plot title and axis labels
+theme_classic(base_size = 12) + # use a simple theme with consistent font size
+theme(
+  legend.position = "none", # remove the legend
+  plot.title = element_text(face = "bold", size = 14), # make the title bold
+  axis.title = element_text(face = "bold"), # make axis titles bold
+  axis.text = element_text(colour = "black") # set axis text to black
+)
+
 #case group have higher mean and median PRS, with slightly greater standard deviation (variation) compare to the control group. The distributions of both group overlap substantially, hence the PRS cannot be perfectly distinguish case from control.
 #both disttibution are unimodal and symmetric, and both have two outliers, case outliers have the lowest PRS and the control outliers have the higher PRS
 ```
@@ -87,25 +122,34 @@ ggplot(PRS, aes(x=status, y=Polygenic_risk_score))+
 3.  Is there a statistically significant difference in the PRS of cases and controls? Ensure you check all the assumptions of the test you choose.
 
 ```{r}
-#check normality visually
-ggplot(PRS, aes(sample=Polygenic_risk_score))+
-  geom_qq()+
-  geom_qq_line()+
-  facet_wrap(~status)
-#QQ-plot does suggest normality for both case and control, a shapiro-wilk test will confirm this finding
+# check normality visually
+ggplot(PRS, aes(sample=Polygenic_risk_score)) +
+  geom_qq() +
+  geom_qq_line() +
+  facet_wrap(~status) +
+  labs(
+    title = "Normal Q-Q Plot of PRS",
+    x = "Theoretical Quantiles",
+    y = "Sample Quantiles"
+  ) +
+  theme_classic()
+# QQ-plot does suggest normality for both case and control, a shapiro-wilk test will confirm this finding
+
 PRS |> 
-  filter(status=="case") |> 
+  filter(status == "case") |> 
   pull(Polygenic_risk_score) |> 
   shapiro.test()
+
 PRS |> 
-  filter(status=="ctrl") |> 
+  filter(status == "ctrl") |> 
   pull(Polygenic_risk_score) |> 
   shapiro.test()
-#for case, the p value is 0.2129, no evidence against normality
-#for ctrl, the p value is 0.007452, strong evidence against normality
-#to do a t-test, both group need to meet the normality assumption, since the ctrl group has violated the assumption, Wilcoxon rank-sum test will be applied here to compare the two groups instead of t-test.
-wilcox.test(Polygenic_risk_score~status, data=PRS)
-#the wilcoxon test statistics value is 15554 with a p-value of 1.013e-08. This suggests a extremely strong evidence that the PRS distribution differ between the Pakinson disease case group and the control group, with case group have higher PRS compare to the control group.
+# for case, the p value is 0.2129, no evidence against normality
+# for ctrl, the p value is 0.007452, strong evidence against normality
+# to do a t-test, both group need to meet the normality assumption, since the ctrl group has violated the assumption, Wilcoxon rank-sum test will be applied here to compare the two groups instead of t-test.
+
+wilcox.test(Polygenic_risk_score ~ status, data = PRS)
+# the wilcoxon test statistics value is 15554 with a p-value of 1.013e-08. This suggests a extremely strong evidence that the PRS distribution differ between the Pakinson disease case group and the control group, with case group have higher PRS compare to the control group.
 ```
 
 ### **23.3.2 RNA-seq of patient iPSC-derived neurons**
@@ -123,61 +167,61 @@ library(ggrepel)
 1.  Which genes are differentially expressed between PD cases and healthy controls? Please also visualise your DE results with appropriate plot(s).
 
 ```{r}
-#Firstly, we need to filter our lowly expressed genes to increase our statistical power. To do this, we will use the filterByExpr() function in the edgeR package. This will keep genes with a count of 10 or more in at least 8 samples (as we have 8 samples per group)
+# Firstly, we need to filter our lowly expressed genes to increase our statistical power. To do this, we will use the filterByExpr() function in the edgeR package. This will keep genes with a count of 10 or more in at least 8 samples (as we have 8 samples per group)
   keep <- filterByExpr(dge)
-#To check the proportion of genes we have ommited, we can create a proportions table:
+# To check the proportion of genes we have ommited, we can create a proportions table:
   proportions(table(keep)) #We are keeping 97.77% of our genes
-#to apply this filter to the DGE object, we will use [] to filter out FALSE hits (lowly expressed genes) and assign this dge
+# to apply this filter to the DGE object, we will use [] to filter out FALSE hits (lowly expressed genes) and assign this dge
   dge <- dge[keep, , keep.lib.sizes = FALSE]
 
-#Now we need to normalise our data by converting it to counts per million (CPM), so we can compare samples and groups, and account for RNA composition bias. To do this we will use the TMM method to calculate the normalisation factor for each sample. normLibSizes() function can be used to calculate normalisation factors
+# Now we need to normalise our data by converting it to counts per million (CPM), so we can compare samples and groups, and account for RNA composition bias. To do this we will use the TMM method to calculate the normalisation factor for each sample. normLibSizes() function can be used to calculate normalisation factors
   dge <- normLibSizes(dge, method = "TMM")
-#the normalisation factors in dge$samples are close to 1 in all samples, suggesting minimal difference in RNA composition between samples
+# the normalisation factors in dge$samples are close to 1 in all samples, suggesting minimal difference in RNA composition between samples
 
-#Now we will fit a linear model using the limma-voom framework 
+# Now we will fit a linear model using the limma-voom framework 
 
-  #By first creating a design matrix to represent covariates
+  # By first creating a design matrix to represent covariates
   design <- model.matrix(~0 + group, data = dge$samples)
 
-  #We will then need to rename our design matrix to be cleaner
+  # We will then need to rename our design matrix to be cleaner
   colnames(design) <- c("Control", "Case")
 
-  #Now make contrast matrix
+  # Now make contrast matrix
   contr_matrix <- makeContrasts(
     CasevsControl = "Case - Control",
     levels = design
   )
-  #creates mean-variance relationship plot to check voom
+  # creates mean-variance relationship plot to check voom
   v <- voom(dge, design, plot = TRUE)
   
-  #applies linear model to mean variance
+  # applies linear model to mean variance
   vfit <- lmFit(v)
   
-  #apply constrasts, calculating coefficients for CasevsControl         contrast
+  # apply constrasts, calculating coefficients for CasevsControl contrast
   vfit <- contrasts.fit(vfit, contrasts = contr_matrix)
   
-  #statistical test: emnpirical bayes moderated T-test
+  # statistical test: emnpirical bayes moderated T-test
   efit <- eBayes(vfit)
   
-  #decide tests function to decide if a gene is differentially          expressed or not with multiple testing correction
+  #decide tests function to decide if a gene is differentially expressed or not with multiple testing correction
   dt <- decideTests(efit)
-  #
+
   summary(dt)
   
   top <- topTable(efit, coef = "CasevsControl", number = Inf)
   #converted to tibble to make it easier to work with
   top_tibble <- as_tibble(top)
 
-#ggplot MA plot
-  #first need to assign gene names to the efit$genes dataframe
+# ggplot MA plot
+  # first need to assign gene names to the efit$genes dataframe
   
-  #turning efit$genes into character
+  # turning efit$genes into character
   efit$genes$genes <- as.character(efit$genes$genes)
-  #so I can now change efit$genes to include SYMBOL column which        matches the entrez_genename_key#entrezid to efit$genes$genes, and     supplies the entrez_genename_key$gene_name to the efit$genes          dataframe
+  # so I can now change efit$genes to include SYMBOL column which matches the entrez_genename_key#entrezid to efit$genes$genes, and supplies the entrez_genename_key$gene_name to the efit$genes dataframe
   efit$genes$SYMBOL <- entrez_genename_key$gene_name[
     match(efit$genes$genes, entrez_genename_key$entrezid)]
 
-  #now organise data from efit into a tibble format
+  # now organise data from efit into a tibble format
   ma_plot_data <- tibble(logFC = efit$coefficients[, "CasevsControl"],
                        AvgExpr = efit$Amean,
                        status = factor(as.numeric(dt[, "CasevsControl"])),
@@ -195,42 +239,53 @@ ma_plot_data_fct <- ma_plot_data %>%
       labels = c("Not DE", "Down", "Up")
     )
   )
-#labelling of top most significant genes
+# labelling of top most significant genes
 top_de_genes <- ma_plot_data_fct %>%
-  slice_min(n = 39, p_value)
-#colours to label points by
-scale_cols <- c(
-  "Not DE" = "black",
-  "Down" = "#1a0099",
-  "Up" = "#990000"
-)
-#MA ggplot
-ggplot(ma_plot_data_fct, aes(x = AvgExpr, y = logFC, col = status)) +
-  geom_point(data = ma_plot_data_fct %>% filter(status == "Not DE"), size = 0.1) +
-  geom_point(data = ma_plot_data_fct %>% filter(status != "Not DE"), size = 1) +
-  geom_label_repel(
-    data = top_de_genes,
-    aes(label = gene, col = NULL),
-    max.overlaps = 39,
-    show.legend = FALSE
-  ) +
-  scale_colour_manual(values = scale_cols) + 
-  theme_classic() +
-  labs(title = "MA plot for Case vs Control")
+  filter(!is.na(gene)) %>%
+  slice_min(p_value, n = 10)
 
-#Volcano Plot
-ggplot(ma_plot_data_fct, aes(x = logFC, y = -log10(p_value), col = status)) +
-  geom_point(data = ma_plot_data_fct %>% filter(status == "Not DE"), size = 0.1) +
-  geom_point(data = ma_plot_data_fct %>% filter(status != "Not DE"), size = 1) +
+# MA ggplot
+ggplot(ma_plot_data_fct, aes(x = AvgExpr, y = logFC, colour = status)) +
+  geom_point(size = 1) +
   geom_label_repel(
     data = top_de_genes,
-    aes(label = gene, col = NULL),
-    max.overlaps = 39,
+    aes(label = gene),
     show.legend = FALSE
   ) +
-  scale_colour_manual(values = scale_cols) + 
-  theme_classic() +
-  labs(title = "Volcano plot for Case Vs Control")
+  scale_colour_manual(values = c(
+    "Not DE" = "grey70",
+    "Down" = "#4C84A6",
+    "Up" = "#D96B5F"
+  )) + # Use consistent colours across plots
+  labs(
+    title = "MA Plot: PD Cases vs Healthy Controls",
+    x = "Average expression",
+    y = "Log2 fold change",
+    colour = "Expression status"
+  ) +
+  theme_classic() # Keep the plot style consistent
+
+# Volcano Plot
+ggplot(ma_plot_data_fct, aes(x = logFC, y = -log10(p_value), colour = status)) +
+  geom_point(size = 1) +
+  geom_label_repel(
+    data = top_de_genes,
+    aes(label = gene),
+    show.legend = FALSE
+  ) +
+  scale_colour_manual(values = c(
+    "Not DE" = "grey70",
+    "Down" = "#4C84A6",
+    "Up" = "#D96B5F"
+  )) + # Use the same colours as the MA plot
+  labs(
+    title = "Volcano Plot: PD Cases vs Healthy Controls",
+    x = "Log2 fold change",
+    y = "-Log10(p-value)",
+    colour = "Expression status"
+  ) +
+  theme_classic()
+
 ```
 
 2.  Which gene ontology families do the DE genes belong to?
@@ -242,14 +297,14 @@ top_de_genes <- top_de_genes |> na.omit() |>
   mutate(gene_name = gene)
 
 top_de_genes_id <- left_join(
-  top_de_genes, entrez_genename_key) |> mutate(entrezgene_id = entrezid) |> select(-entrezid)
+  top_de_genes, entrez_genename_key) |> 
+  mutate(entrezgene_id = entrezid) |> 
+  dplyr::select(-entrezid) # Remove the original ID column
  
 #now join top_de_genes_id with gene_ontology
 top_de_gene_ontology <- top_de_genes_id |> left_join(gene_ontology) 
 
-ggplot(
-  top_de_gene_ontology,
-  aes(x = desc, fill = desc)) +
+ggplot(top_de_gene_ontology, aes(x = desc, fill = desc)) +
   geom_bar(width = 0.5) +
   labs(x = "Gene ontology family",
        title = "Gene Ontology family of DE genes in Parkinson's Neurons") +
@@ -272,14 +327,28 @@ mds_tibble <- tibble(
 dim1_var_explained <- round(mds_result$var.explained[1] * 100)
 dim2_var_explained <- round(mds_result$var.explained[2] * 100)
 
-#create ggplot
-ggplot(data = mds_tibble,
-       aes(x = x, y = y, colour = group)) + geom_point() + geom_text_repel(aes(label = sample)) +
+# Create MDS plot
+ggplot(mds_tibble, aes(x = x, y = y, colour = group)) +
+  geom_point(size = 3) + # show sample clustering
+  geom_text_repel(aes(label = sample), size = 3, box.padding = 0.5,
+  point.padding = 0.2) + # label samples, reduce overlap between labels
+  scale_colour_manual(values = c(
+    "case" = "#D96B5F",
+    "control" = "#4C84A6"
+  )) + # Keep colours consistent across plots
   labs(
-    x = paste0("Leading logFC dim 1 (", dim1_var_explained, "%)"),
-    y = paste0("Leading logFC dim 2 (", dim2_var_explained, "%)")
+    title = "MDS Plot of Gene Expression",
+    x = paste0("Leading logFC dimension 1 (", dim1_var_explained, "%)"),
+    y = paste0("Leading logFC dimension 2 (", dim2_var_explained, "%)"),
+    colour = "Disease status"
+  ) +
+  theme_classic(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold", size = 14),
+    axis.title = element_text(face = "bold"),
+    axis.text = element_text(colour = "black")
   )
-#IMPROVE PLOT, add title, cleanup key
+
 # From this plot we can see that 5/8 of the PD patient groups cluster to the left of the map, while the other 3 PD patients cluster with the 8 control cases
 ```
 
@@ -399,14 +468,6 @@ t_test_results |>
 ```
 
 3.  What are the mechanisms of action and targets of the compounds you identify in Q2?
-
-- cmpd_5118 – LRP6: Agonist; co-receptor in canonical Wnt/Beta-catenin signalling.
-
-- cmpd_5386 – MAPK1: Agonist(according to the dataset); protein kinase involved in MAPK/ERK signalling; regulates cell signalling, proliferation, differentiation and survival.
-
-- cmpd_7466 – RIT2: Agonist; Neuron-associated small GTPase involved in intracellular signalling. RIT2 has been associated with Parkinson's disease susceptibility.
-
-- cmpd_6972 – APBA3: Agnoist; Adaptor protein that interacts with amyloid precursor protein.
 
 ```{r}
 # Find the target and mechanism of action for the significant compounds.
