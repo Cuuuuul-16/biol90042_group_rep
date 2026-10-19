@@ -242,7 +242,7 @@ ma_plot_data_fct <- ma_plot_data %>%
 # labelling of top most significant genes
 top_de_genes <- ma_plot_data_fct %>%
   filter(!is.na(gene)) %>%
-  slice_min(p_value, n = 10)
+  slice_min(p_value, n = 39)
 
 # MA ggplot
 ggplot(ma_plot_data_fct, aes(x = AvgExpr, y = logFC, colour = status)) +
@@ -309,6 +309,8 @@ ggplot(top_de_gene_ontology, aes(x = desc, fill = desc)) +
   labs(x = "Gene ontology family",
        title = "Gene Ontology family of DE genes in Parkinson's Neurons") +
   theme(legend.position = "none")
+
+top_de_gene_ontology |> slice_min(p_value, n = 39) |> dplyr::select(gene, status, desc)
 ```
 
 3.  Is the clustering of samples by gene expression consistent with their disease status as cases and controls?
