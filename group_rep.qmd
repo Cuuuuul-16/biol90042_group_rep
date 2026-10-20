@@ -767,7 +767,7 @@ plot(lm_model_PRSxtreatment_gait)
 resettest(lm_model_PRSxtreatment_gait)#Linearity: the reset test found no evidence that the model is not linear with p-value equals to 0.3589
 bptest(lm_model_PRSxtreatment_gait)#Homoscedasticity: The Breusch–Pagan test found no evidence of unequal residual variance (p-value=0.4197)
 shapiro.test(lm_model_PRSxtreatment_gait$residuals)#Normality of residuals: The Shapiro–Wilk test found no evidence that the residuals are not following a normal distribution (p-value=0.8745)
-#Independence is met as described above
+#Independence is met as described above 
 #All four assumptions are met, and hence the liner model for PRSxtreatment_gait is valid.
 ```
 
