@@ -527,6 +527,7 @@ ggplot( gait_long, aes(x = time, y= gait)) +
   geom_line(linewidth = 0.3) + 
   geom_hline(yintercept = 0, colour = "blue") + 
   facet_wrap(~ donorid) +
+  theme_minimal() +
   labs(
     x = "Time (seconds)",
     y = "Vertical orientation (degrees off-axis)",
