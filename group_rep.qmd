@@ -760,7 +760,7 @@ resettest(lm_model_PRSxtreatment_gait)#Linearity: the reset test found no eviden
 bptest(lm_model_PRSxtreatment_gait)#Homoscedasticity: The Breusch–Pagan test found no evidence of unequal residual variance (p-value=0.4197)
 shapiro.test(lm_model_PRSxtreatment_gait$residuals)#Normality of residuals: The Shapiro–Wilk test found no evidence that the residuals are not following a normal distribution (p-value=0.8745)
 #Independence is met as described above
-#All four assumptions are met, and hence the liner model for PRSxtreatment_gait is valid
+#All four assumptions are met, and hence the liner model for PRSxtreatment_gait is valid.
 ```
 
 5.  In a paragraph, summarise your findings and suggest directions for future research.
