@@ -711,11 +711,13 @@ ggplot(
 #linear regression
 #L-DOPA control: Higher PRS is associated with greater Absolute mean deviation from upright
 #New compound: Higher PRS is associated with smaller Absolute mean deviation from upright
+#However, the significance is not yet determined
 
+#multiple linear regression model examines whether PRS is associated with Absolute mean deviation from upright, while adjusting for treatment group, age and exercise.
 lm_model_PRS_gait<-lm(absolute_mean~Polygenic_risk_score+treatment+age+exercise, data=gait_PRS)
 summary(lm_model_PRS_gait)#After adjusting for treatment, age and exercise, PRS was not significantly associated with mean absolute deviation from upright (β = 0.394 per one-unit increase in PRS, SE = 0.364, p = 0.303). This indicates insufficient evidence of an association, rather than proving that no relationship exists.
 
-#assumption for linear model
+#assumption for linear model lm_model_PRS_gait
 library(lmtest)
 plot(lm_model_PRS_gait)#visualise
 #it will be hard to tell if the assumption are met visually, the tests are applied
@@ -724,6 +726,19 @@ bptest(lm_model_PRS_gait)#Homoscedasticity: The Breusch–Pagan test found no ev
 shapiro.test(lm_model_PRS_gait$residuals)#Normality of residuals: The Shapiro–Wilk test found no evidence that the residuals are not following a normal distribution (p-value=0.4728)
 #Independence: Each patient contributed one PRS and one gait summary hence there is only one observation per patient, therefore the independence of errors between patients is met which means one patient’s unexplained gait variation should not be related to another patient’s.
 #All four assumptions are met, and hence the liner model for PRS_gait is valid
+
+#multiple linear regression model examines whether PRS is associated with Absolute mean deviation from upright between treatment groups, while adjusting for age and exercise.
+lm_model_PRSxtreatment_gait<-lm(absolute_mean~Polygenic_risk_score*treatment+age+exercise, data=gait_PRS)
+summary(lm_model_PRSxtreatment_gait)
+#After adjusting for age and exercise, there was insufficient evidence that the PRS–gait relationship differed between treatments (p-value = 0.123689)
+
+#assumption for linear model lm_model_PRSxtreatment_gait
+plot(lm_model_PRSxtreatment_gait)
+resettest(lm_model_PRSxtreatment_gait)#Linearity: the reset test found no evidence that the model is not linear with p-value equals to 0.3589
+bptest(lm_model_PRSxtreatment_gait)#Homoscedasticity: The Breusch–Pagan test found no evidence of unequal residual variance (p-value=0.4197)
+shapiro.test(lm_model_PRSxtreatment_gait$residuals)#Normality of residuals: The Shapiro–Wilk test found no evidence that the residuals are not following a normal distribution (p-value=0.8745)
+#Independence is met as described above
+#All four assumptions are met, and hence the liner model for PRSxtreatment_gait is valid
 ```
 
 5.  In a paragraph, summarise your findings and suggest directions for future research.
