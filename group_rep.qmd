@@ -174,8 +174,6 @@ library(ggrepel)
 ```{r}
 # Firstly, we need to filter our lowly expressed genes to increase our statistical power. To do this, we will use the filterByExpr() function in the edgeR package. This will keep genes with a count of 10 or more in at least 8 samples (as we have 8 samples per group)
   keep <- filterByExpr(dge)
-# To check the proportion of genes we have ommited, we can create a proportions table:
-  proportions(table(keep)) #We are keeping 97.77% of our genes
 # to apply this filter to the DGE object, we will use [] to filter out FALSE hits (lowly expressed genes) and assign this dge
   dge <- dge[keep, , keep.lib.sizes = FALSE]
 
@@ -210,8 +208,6 @@ library(ggrepel)
   
   #decide tests function to decide if a gene is differentially expressed or not with multiple testing correction
   dt <- decideTests(efit)
-
-  summary(dt)
   
   top <- topTable(efit, coef = "CasevsControl", number = Inf)
   #converted to tibble to make it easier to work with
