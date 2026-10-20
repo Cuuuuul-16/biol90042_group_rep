@@ -10,16 +10,16 @@ Load dataset:
 
 ```{r}
 library(tidyverse)
-drugscreen <- load("~/Desktop/biol90042_group_rep/drugscreen.Rda")
-gait<- load("~/Desktop/biol90042_group_rep/gait.Rda")
-prs<- load("~/Desktop/biol90042_group_rep/prs.Rda")
-rnaseq<- load("~/Desktop/biol90042_group_rep/rnaseq.Rda")
-rnaseq_gene_info<- load("~/Desktop/biol90042_group_rep/rnaseq_gene_info.Rda")
-drugscreen <- load("~/Desktop/biol90042_group_rep/drugscreen.Rda")
-gait<- load("~/Desktop/biol90042_group_rep/gait.Rda")
-prs<- load("~/Desktop/biol90042_group_rep/prs.Rda")
-rnaseq<- load("~/Desktop/biol90042_group_rep/rnaseq.Rda")
-rnaseq_gene_info<- load("~/Desktop/biol90042_group_rep/rnaseq_gene_info.Rda")
+drugscreen <- load("~/group3_data/drugscreen.Rda")
+gait<- load("~/roup3_data/gait.Rda")
+prs<- load("~/roup3_data/prs.Rda")
+rnaseq<- load("~/roup3_data/rnaseq.Rda")
+rnaseq_gene_info<- load("~/roup3_data/rnaseq_gene_info.Rda")
+drugscreen <- load("../group3_data/drugscreen.Rda")
+gait<- load("../group3_data/gait.Rda")
+prs<- load("../group3_data/prs.Rda")
+rnaseq<- load("../group3_data/rnaseq.Rda")
+rnaseq_gene_info<- load("../group3_data/rnaseq_gene_info.Rda")
 ```
 
 ### **23.3.1 Population genetics**
@@ -374,24 +374,14 @@ plate1_long <- plate1 |>
 # Heat map
 ggplot(plate1_long, aes(x = col_num, y = row_num, fill = RLU)) +
   geom_tile() +
-  scale_fill_gradient(
-    low = "#DCEAF4",
-    high = "#245A80",
-    limits = c(429, 742),
-    name = "Luminescence (RLU)"
-  ) + # Use a blue gradient to represent luminescence values
-  scale_y_reverse(breaks = seq(1, 32, by = 2)) + # Display plate rows from top to bottom
-  scale_x_continuous(breaks = seq(1, 48, by = 3)) +
+  scale_fill_gradient(low = "lightblue", high = "darkblue", limits = c(429, 742), breaks = seq(400, 750, by = 50)) +
   labs(
-    title = "Luminescence Across the 1536-Well Plate",
+    title = "Luminescence across the 1536-well plate",
     x = "Column",
-    y = "Row"
+    y = "Row",
+    fill = "Luminescence (RLU)"
   ) +
-  theme_classic(base_size = 12) +
-  theme(
-    plot.title = element_text(face = "bold", size = 14),
-    axis.title = element_text(face = "bold")
-  )
+  theme_minimal()
 
 # Most values have relatively similar luminescence values.
 # A few individual wells have much higher luminescence, coloured with dark blue.
@@ -503,6 +493,9 @@ The participants' mean gait measurements across the 700 seconds ranges from appr
 Absolute mean gait measurements range from approximately 2° to 14°, indicating that the average magnitude of deviation from upright is greater than the mean values suggest. This is because absolute mean accounts for the magnitude of deviations regardless of direction and prevents positive and negative values to cancel each other, as can happen with mean calculations. Therefore, this statistic is most useful for capturing the overall gait smoothness and balance. It also best reflects the differences observed in the plots. For example, participant d056 has the highest absolute mean (approximately 14°) and appears to show the greatest deviation from 0° in their plot. However, absolute mean only measures the average magnitude of deviation from upright and does not directly show how smoothly participants' gait changes across the 700 seconds.
 
 ```{r}
+
+load("~/Desktop/group3_data/gait.Rda")
+ls()
 View(gait_data)
 
 #check for missing data
@@ -536,26 +529,17 @@ gait_long <- gait_long |>  mutate(time = as.numeric(time))
 # plot each participant's gait measurements across the 700 seconds
 # horizontal line at 0 represents perfectly upright orientation
 
-ggplot(gait_long, aes(x = time, y = gait, colour = treatment)) +
-  geom_line(linewidth = 0.3) +
-  geom_hline(yintercept = 0, linetype = "dashed", colour = "grey50") + # Mark upright orientation
-  facet_wrap(~donorid) +
-  scale_colour_manual(values = c(
-    "New compound" = "#D96B5F",
-    "L-DOPA control" = "#4C84A6"
-  )) +
+ggplot( gait_long, aes(x = time, y= gait)) +
+  geom_line(linewidth = 0.3) + 
+  geom_hline(yintercept = 0, colour = "blue") + 
+  facet_wrap(~ donorid) +
+  theme_minimal() +
   labs(
-    title = "Gait Orientation Over Time",
     x = "Time (seconds)",
-    y = "Vertical Orientation (Degrees Off-Axis)",
-    colour = "Treatment"
-  ) +
-  theme_classic(base_size = 12) +
-  theme(
-    plot.title = element_text(face = "bold", size = 14),
-    axis.title = element_text(face = "bold")
+    y = "Vertical orientation (degrees off-axis)",
+    title = "Gait orientation over time for each participant"
   )
-  
+
 
 #calculate descriptive statistics for all participants
 
