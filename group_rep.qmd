@@ -30,7 +30,7 @@ longer_ca_co_genotypes <- ca_co_genotypes |>
   ) |> 
   left_join(
     gwas_top_hits |> 
-      select(locus, beta), #select the locus and beta row
+      dplyr::select(locus, beta), #select the locus and beta row
     by = join_by(risk_locus == locus)
     )
 #make it easier to do following calculation
@@ -304,20 +304,16 @@ top_de_genes_id <- left_join(
 #now join top_de_genes_id with gene_ontology
 top_de_gene_ontology <- top_de_genes_id |> left_join(gene_ontology) 
 
-ggplot(top_de_gene_ontology, aes(x = desc, fill = desc)) +
-  geom_bar(width = 0.5) +
-  labs(x = "Gene ontology family",
-       title = "Gene Ontology family of DE genes in Parkinson's Neurons") +
-  theme(legend.position = "none")
-
 top_de_gene_ontology |> slice_min(p_value, n = 39) |> dplyr::select(gene, status, desc)
 ```
 
 3.  Is the clustering of samples by gene expression consistent with their disease status as cases and controls?
 
+From this multi-dimensional scale (MDS) plot, we can see that 5/8 cases cluster together on the left, and all the controls cluster to the right. Interestingly, 3/8 cases cluster to the left where the controls are. This raises concerns about a potential batch effect or mislabeling of samples, as the clustering of samples by gene expression is not always consistent with disease status.
+
 ```{r}
 #Now we want to check that our samples group together as we'd expect based on our experimental design, by making an MDS plot. This will show us whether or not the controls group together, and the PD patients group together. To do this, we will use the plotMDS() function and then make the MDS plot in ggplot2
-
+mds_result <- plotMDS(dge)
 #create tibble
 mds_tibble <- tibble(
   x = mds_result$x,
@@ -350,8 +346,6 @@ ggplot(mds_tibble, aes(x = x, y = y, colour = group)) +
     axis.title = element_text(face = "bold"),
     axis.text = element_text(colour = "black")
   )
-
-# From this plot we can see that 5/8 of the PD patient groups cluster to the left of the map, while the other 3 PD patients cluster with the 8 control cases
 ```
 
 ### **23.3.3 Drug screening**
@@ -660,7 +654,35 @@ nrow(common_donorid)
 2.  Do any variables other than gene expression distinguish the RNA-seq cases from controls? (Hint: try colouring points on your MDS plot by other information you have about the donors, from the other datasets)
 
 ```{r}
-Mac
+#changed dge$samples so that the row names case/control# are now a column within the dataframe
+dge_samples <- rownames_to_column(dge$samples, var = "sample")
+
+#joined dge_samples to mds_tibble to now include donorid in the tibble
+mds_tibble <- mds_tibble |> left_join(dge_samples |> dplyr::select(sample, donorid), by = "sample") 
+
+#WHAT OTHER FACTOR COULD BE AT PLAY? PGS, AGE, EXERCISE?
+
+
+ggplot(mds_tibble, aes(x = x, y = y, colour = group)) +
+  geom_point(size = 3) + # show sample clustering
+  geom_text_repel(aes(label = sample), size = 3, box.padding = 0.5,
+                  point.padding = 0.2) + # label samples, reduce overlap between labels
+  scale_colour_manual(values = c(
+    "case" = "#D96B5F",
+    "control" = "#4C84A6"
+  )) + # Keep colours consistent across plots
+  labs(
+    title = "MDS Plot of Gene Expression",
+    x = paste0("Leading logFC dimension 1 (", dim1_var_explained, "%)"),
+    y = paste0("Leading logFC dimension 2 (", dim2_var_explained, "%)"),
+    colour = "Disease status"
+  ) +
+  theme_classic(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold", size = 14),
+    axis.title = element_text(face = "bold"),
+    axis.text = element_text(colour = "black")
+  )
 ```
 
 3.  Are any of the gene targets of hit compounds from the drug screen, differentially expressed in RNA-seq? Which GO terms are they associated with and what might this tell you about the pathology of PD?
