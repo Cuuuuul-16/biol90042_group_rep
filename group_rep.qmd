@@ -538,7 +538,7 @@ gait_long <- gait_long |>  mutate(time = as.numeric(time))
 
 ggplot(gait_long, aes(x = time, y = gait, colour = treatment)) +
   geom_line(linewidth = 0.3) +
-  geom_hline(yintercept = 0, linetype = "dashed", colour = "grey50") + # Mark upright orientation
+  geom_hline(yintercept = 0, colour = "grey50") + # Mark upright orientation
   facet_wrap(~donorid) +
   scale_colour_manual(values = c(
     "New compound" = "#D96B5F",
@@ -568,7 +568,6 @@ gait_summary <- gait_long |>
     min_gait = min(gait),
     max_gait = max(gait),
     absolute_mean = mean(abs(gait))
-    
   ) |>  
   ungroup()
   
