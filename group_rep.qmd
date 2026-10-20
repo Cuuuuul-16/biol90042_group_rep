@@ -10,11 +10,16 @@ Load dataset:
 
 ```{r}
 library(tidyverse)
-drugscreen <- load("~/Desktop/biol90042_group_rep/drugscreen.Rda")
-gait<- load("~/Desktop/biol90042_group_rep/gait.Rda")
-prs<- load("~/Desktop/biol90042_group_rep/prs.Rda")
-rnaseq<- load("~/Desktop/biol90042_group_rep/rnaseq.Rda")
-rnaseq_gene_info<- load("~/Desktop/biol90042_group_rep/rnaseq_gene_info.Rda")
+drugscreen <- load("~/group3_data/drugscreen.Rda")
+gait<- load("~/roup3_data/gait.Rda")
+prs<- load("~/roup3_data/prs.Rda")
+rnaseq<- load("~/roup3_data/rnaseq.Rda")
+rnaseq_gene_info<- load("~/roup3_data/rnaseq_gene_info.Rda")
+drugscreen <- load("../group3_data/drugscreen.Rda")
+gait<- load("../group3_data/gait.Rda")
+prs<- load("../group3_data/prs.Rda")
+rnaseq<- load("../group3_data/rnaseq.Rda")
+rnaseq_gene_info<- load("../group3_data/rnaseq_gene_info.Rda")
 ```
 
 ### **23.3.1 Population genetics**
@@ -149,7 +154,7 @@ PRS |>
 # to do a t-test, both group need to meet the normality assumption, since the ctrl group has violated the assumption, Wilcoxon rank-sum test will be applied here to compare the two groups instead of t-test.
 
 wilcox.test(Polygenic_risk_score ~ status, data = PRS)
-# the wilcoxon test statistics value is 15554 with a p-value of 1.013e-08. This suggests a extremely strong evidence that the PRS distribution differ between the Pakinson disease case group and the control group, with case group have higher PRS compare to the control group.
+# the wilcoxon test statistics value is 15554 with a p-value of 1.013e-08. This suggests a extremely strong evidence that the PRS distribution differ between the Parkinson disease case group and the control group, with case group have higher PRS compare to the control group.
 ```
 
 ### **23.3.2 RNA-seq of patient iPSC-derived neurons**
@@ -645,10 +650,11 @@ lm(absolute_mean ~ treatment.x + age + exercise, data = joined_data) %>% summary
 ```{r}
 common_donorid<-ca_co_genotypes |> 
   filter(
-    donorid %in% gait_data$donorid
+    donorid %in% gait_data$donorid,
+    donorid %in% dge$samples$donorid
   )
 nrow(common_donorid)
-#there are 16 patients appear across all four arms of the study
+#there are 8 patients appear across all four arms of the study
 ```
 
 2.  Do any variables other than gene expression distinguish the RNA-seq cases from controls? (Hint: try colouring points on your MDS plot by other information you have about the donors, from the other datasets)
