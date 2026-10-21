@@ -171,6 +171,8 @@ library(ggrepel)
 
 1.  Which genes are differentially expressed between PD cases and healthy controls? Please also visualise your DE results with appropriate plot(s).
 
+    The top 5 upregulated DEG's in PD cases compared to healthy controls are TXNRD2, MSRB2, APOE, SRXN1, and ERCC3. The top 5 downregulated DEG's in PD cases vs controls were RIT2, MAPK1, APBA3, LRP6, and LARGE1.
+
 ```{r}
 # Firstly, we need to filter our lowly expressed genes to increase our statistical power. To do this, we will use the filterByExpr() function in the edgeR package. This will keep genes with a count of 10 or more in at least 8 samples (as we have 8 samples per group)
   keep <- filterByExpr(dge)
@@ -241,15 +243,15 @@ ma_plot_data_fct <- ma_plot_data %>%
     )
   )
 # labelling of top most significant genes
-top_de_genes <- ma_plot_data_fct %>%
+top_10_de_genes <- ma_plot_data_fct %>%
   filter(!is.na(gene)) %>%
-  slice_min(p_value, n = 39)
+  slice_min(p_value, n = 10)
 
 # MA ggplot
 ggplot(ma_plot_data_fct, aes(x = AvgExpr, y = logFC, colour = status)) +
   geom_point(size = 1) +
   geom_label_repel(
-    data = top_de_genes,
+    data = top_10_de_genes,
     aes(label = gene),
     show.legend = FALSE
   ) +
@@ -270,7 +272,7 @@ ggplot(ma_plot_data_fct, aes(x = AvgExpr, y = logFC, colour = status)) +
 ggplot(ma_plot_data_fct, aes(x = logFC, y = -log10(p_value), colour = status)) +
   geom_point(size = 1) +
   geom_label_repel(
-    data = top_de_genes,
+    data = top_10_de_genes,
     aes(label = gene),
     show.legend = FALSE
   ) +
@@ -291,10 +293,14 @@ ggplot(ma_plot_data_fct, aes(x = logFC, y = -log10(p_value), colour = status)) +
 
 2.  Which gene ontology families do the DE genes belong to?
 
+    From this table we can see that all of the upregulated DE genes are associated with the gene ontology family; "Response to oxidative stress", while all the downregulated DE genes are of the "Synaptic transmission" family.
+
 ```{r}
 #use top_de_genes, join gene_ontology
 #first join top_de_genes with entrez_id
-top_de_genes <- top_de_genes |> na.omit() |> 
+top_de_genes <- ma_plot_data_fct |> 
+  filter(!is.na(gene)) |>  
+  slice_min(p_value, n = 39) |> 
   mutate(gene_name = gene)
 
 top_de_genes_id <- left_join(
@@ -305,12 +311,13 @@ top_de_genes_id <- left_join(
 #now join top_de_genes_id with gene_ontology
 top_de_gene_ontology <- top_de_genes_id |> left_join(gene_ontology) 
 
-top_de_gene_ontology |> slice_min(p_value, n = 39) |> dplyr::select(gene, status, desc)
+top_de_gene_ontology |> slice_min(p_value, n = 39) |> dplyr::select(gene, status, desc) 
+
 ```
 
 3.  Is the clustering of samples by gene expression consistent with their disease status as cases and controls?
 
-From this multi-dimensional scale (MDS) plot, we can see that 5/8 cases cluster together on the left, and all the controls cluster to the right. Interestingly, 3/8 cases cluster to the left where the controls are. This raises concerns about a potential batch effect or mislabeling of samples, as the clustering of samples by gene expression is not always consistent with disease status.
+    From this multi-dimensional scale (MDS) plot, we can see that 5/8 cases cluster together on the left, and all the controls cluster to the right. Interestingly, 3/8 cases cluster to the left where the controls are. This raises concerns about a potential batch effect or mislabeling of samples, as the clustering of samples by gene expression is not always consistent with disease status.
 
 ```{r}
 #Now we want to check that our samples group together as we'd expect based on our experimental design, by making an MDS plot. This will show us whether or not the controls group together, and the PD patients group together. To do this, we will use the plotMDS() function and then make the MDS plot in ggplot2
@@ -664,7 +671,8 @@ lm(absolute_mean ~ treatment.x + age + exercise, data = joined_data) %>% summary
 common_donorid<-ca_co_genotypes |> 
   filter(
     donorid %in% gait_data$donorid,
-    donorid %in% dge$samples$donorid
+    donorid %in% dge$samples$donorid,
+    donorid %in% PRS$donorid
   )
 nrow(common_donorid)
 #there are 8 patients appear across all four arms of the study
@@ -677,24 +685,26 @@ nrow(common_donorid)
 dge_samples <- rownames_to_column(dge$samples, var = "sample")
 
 #joined dge_samples to mds_tibble to now include donorid in the tibble
-mds_tibble <- mds_tibble |> left_join(dge_samples |> dplyr::select(sample, donorid), by = "sample") 
+mds_tibble <- mds_tibble |> left_join(dge_samples |> dplyr::select(sample, donorid), by = "sample")  
 
-#WHAT OTHER FACTOR COULD BE AT PLAY? PGS, AGE, EXERCISE?
+#joined mds_tibble with gait_data 
+mds_tibble_joined <- mds_tibble |> left_join(gait_data |> dplyr::select(donorid, treatment, age, exercise), by = "donorid") 
 
 
-ggplot(mds_tibble, aes(x = x, y = y, colour = group)) +
+
+ggplot(mds_tibble_joined, aes(x = x, y = y, colour = exercise)) +
   geom_point(size = 3) + # show sample clustering
   geom_text_repel(aes(label = sample), size = 3, box.padding = 0.5,
                   point.padding = 0.2) + # label samples, reduce overlap between labels
   scale_colour_manual(values = c(
-    "case" = "#D96B5F",
-    "control" = "#4C84A6"
+    "y" = "#D96B5F",
+    "n" = "#4C84A6"
   )) + # Keep colours consistent across plots
   labs(
     title = "MDS Plot of Gene Expression",
     x = paste0("Leading logFC dimension 1 (", dim1_var_explained, "%)"),
     y = paste0("Leading logFC dimension 2 (", dim2_var_explained, "%)"),
-    colour = "Disease status"
+    colour = "Exercise status"
   ) +
   theme_classic(base_size = 12) +
   theme(
@@ -784,7 +794,7 @@ shapiro.test(lm_model_PRSxtreatment_gait$residuals)#Normality of residuals: The 
 
 5.  In a paragraph, summarise your findings and suggest directions for future research.
 
-clinical trial summary:
+Clinical trial summary:
 
 The clinical trial analysis shows that participants receiving the new compound had lower mean absolute gait measurements than those receiving L-DOPA. Both age and exercise were found to be associated with mean absolute gait. However, even after adjusting for these factors, the relationship between treatment and mean absolute gait remained statistically significant. This suggests that the new compound is associated with smaller average deviations from upright compared to the standard care (L-DOPA).
 
