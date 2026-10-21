@@ -10,16 +10,16 @@ Load dataset:
 
 ```{r}
 library(tidyverse)
-drugscreen <- load("~/group3_data/drugscreen.Rda")
-gait<- load("~/roup3_data/gait.Rda")
-prs<- load("~/roup3_data/prs.Rda")
-rnaseq<- load("~/roup3_data/rnaseq.Rda")
-rnaseq_gene_info<- load("~/roup3_data/rnaseq_gene_info.Rda")
-drugscreen <- load("../group3_data/drugscreen.Rda")
-gait<- load("../group3_data/gait.Rda")
-prs<- load("../group3_data/prs.Rda")
-rnaseq<- load("../group3_data/rnaseq.Rda")
-rnaseq_gene_info<- load("../group3_data/rnaseq_gene_info.Rda")
+drugscreen <- load("~/Desktop/biol90042_group_rep/drugscreen.Rda")
+gait<- load("~/Desktop/biol90042_group_rep/gait.Rda")
+prs<- load("~/Desktop/biol90042_group_rep/prs.Rda")
+rnaseq<- load("~/Desktop/biol90042_group_rep/rnaseq.Rda")
+rnaseq_gene_info<- load("~/Desktop/biol90042_group_rep/rnaseq_gene_info.Rda")
+drugscreen <- load("~/Desktop/biol90042_group_rep/drugscreen.Rda")
+gait<- load("~/Desktop/biol90042_group_rep/gait.Rda")
+prs<- load("~/Desktop/biol90042_group_rep/prs.Rda")
+rnaseq<- load("~/Desktop/biol90042_group_rep/rnaseq.Rda")
+rnaseq_gene_info<- load("~/Desktop/biol90042_group_rep/rnaseq_gene_info.Rda")
 ```
 
 ### **23.3.1 Population genetics**
@@ -171,11 +171,11 @@ library(ggrepel)
 
 1.  Which genes are differentially expressed between PD cases and healthy controls? Please also visualise your DE results with appropriate plot(s).
 
+    The top 5 upregulated DEG's in PD cases compared to healthy controls are TXNRD2, MSRB2, APOE, SRXN1, and ERCC3. The top 5 downregulated DEG's in PD cases vs controls were RIT2, MAPK1, APBA3, LRP6, and LARGE1.
+
 ```{r}
 # Firstly, we need to filter our lowly expressed genes to increase our statistical power. To do this, we will use the filterByExpr() function in the edgeR package. This will keep genes with a count of 10 or more in at least 8 samples (as we have 8 samples per group)
   keep <- filterByExpr(dge)
-# To check the proportion of genes we have ommited, we can create a proportions table:
-  proportions(table(keep)) #We are keeping 97.77% of our genes
 # to apply this filter to the DGE object, we will use [] to filter out FALSE hits (lowly expressed genes) and assign this dge
   dge <- dge[keep, , keep.lib.sizes = FALSE]
 
@@ -210,8 +210,6 @@ library(ggrepel)
   
   #decide tests function to decide if a gene is differentially expressed or not with multiple testing correction
   dt <- decideTests(efit)
-
-  summary(dt)
   
   top <- topTable(efit, coef = "CasevsControl", number = Inf)
   #converted to tibble to make it easier to work with
@@ -245,15 +243,15 @@ ma_plot_data_fct <- ma_plot_data %>%
     )
   )
 # labelling of top most significant genes
-top_de_genes <- ma_plot_data_fct %>%
+top_10_de_genes <- ma_plot_data_fct %>%
   filter(!is.na(gene)) %>%
-  slice_min(p_value, n = 39)
+  slice_min(p_value, n = 10)
 
 # MA ggplot
 ggplot(ma_plot_data_fct, aes(x = AvgExpr, y = logFC, colour = status)) +
   geom_point(size = 1) +
   geom_label_repel(
-    data = top_de_genes,
+    data = top_10_de_genes,
     aes(label = gene),
     show.legend = FALSE
   ) +
@@ -274,7 +272,7 @@ ggplot(ma_plot_data_fct, aes(x = AvgExpr, y = logFC, colour = status)) +
 ggplot(ma_plot_data_fct, aes(x = logFC, y = -log10(p_value), colour = status)) +
   geom_point(size = 1) +
   geom_label_repel(
-    data = top_de_genes,
+    data = top_10_de_genes,
     aes(label = gene),
     show.legend = FALSE
   ) +
@@ -295,10 +293,14 @@ ggplot(ma_plot_data_fct, aes(x = logFC, y = -log10(p_value), colour = status)) +
 
 2.  Which gene ontology families do the DE genes belong to?
 
+    From this table we can see that all of the upregulated DE genes are associated with the gene ontology family; "Response to oxidative stress", while all the downregulated DE genes are of the "Synaptic transmission" family.
+
 ```{r}
 #use top_de_genes, join gene_ontology
 #first join top_de_genes with entrez_id
-top_de_genes <- top_de_genes |> na.omit() |> 
+top_de_genes <- ma_plot_data_fct |> 
+  filter(!is.na(gene)) |>  
+  slice_min(p_value, n = 39) |> 
   mutate(gene_name = gene)
 
 top_de_genes_id <- left_join(
@@ -309,12 +311,13 @@ top_de_genes_id <- left_join(
 #now join top_de_genes_id with gene_ontology
 top_de_gene_ontology <- top_de_genes_id |> left_join(gene_ontology) 
 
-top_de_gene_ontology |> slice_min(p_value, n = 39) |> dplyr::select(gene, status, desc)
+top_de_gene_ontology |> slice_min(p_value, n = 39) |> dplyr::select(gene, status, desc) 
+
 ```
 
 3.  Is the clustering of samples by gene expression consistent with their disease status as cases and controls?
 
-From this multi-dimensional scale (MDS) plot, we can see that 5/8 cases cluster together on the left, and all the controls cluster to the right. Interestingly, 3/8 cases cluster to the left where the controls are. This raises concerns about a potential batch effect or mislabeling of samples, as the clustering of samples by gene expression is not always consistent with disease status.
+    From this multi-dimensional scale (MDS) plot, we can see that 5/8 cases cluster together on the left, and all the controls cluster to the right. Interestingly, 3/8 cases cluster to the left where the controls are. This raises concerns about a potential batch effect or mislabeling of samples, as the clustering of samples by gene expression is not always consistent with disease status.
 
 ```{r}
 #Now we want to check that our samples group together as we'd expect based on our experimental design, by making an MDS plot. This will show us whether or not the controls group together, and the PD patients group together. To do this, we will use the plotMDS() function and then make the MDS plot in ggplot2
@@ -374,14 +377,24 @@ plate1_long <- plate1 |>
 # Heat map
 ggplot(plate1_long, aes(x = col_num, y = row_num, fill = RLU)) +
   geom_tile() +
-  scale_fill_gradient(low = "lightblue", high = "darkblue", limits = c(429, 742), breaks = seq(400, 750, by = 50)) +
+  scale_fill_gradient(
+    low = "#DCEAF4",
+    high = "#245A80",
+    limits = c(429, 742),
+    name = "Luminescence (RLU)"
+  ) + # Use a blue gradient to represent luminescence values
+  scale_y_reverse(breaks = seq(1, 32, by = 2)) + # Display plate rows from top to bottom
+  scale_x_continuous(breaks = seq(1, 48, by = 3)) +
   labs(
-    title = "Luminescence across the 1536-well plate",
+    title = "Luminescence Across the 1536-Well Plate",
     x = "Column",
-    y = "Row",
-    fill = "Luminescence (RLU)"
+    y = "Row"
   ) +
-  theme_minimal()
+  theme_classic(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold", size = 14),
+    axis.title = element_text(face = "bold")
+  )
 
 # Most values have relatively similar luminescence values.
 # A few individual wells have much higher luminescence, coloured with dark blue.
@@ -493,9 +506,6 @@ The participants' mean gait measurements across the 700 seconds ranges from appr
 Absolute mean gait measurements range from approximately 2° to 14°, indicating that the average magnitude of deviation from upright is greater than the mean values suggest. This is because absolute mean accounts for the magnitude of deviations regardless of direction and prevents positive and negative values to cancel each other, as can happen with mean calculations. Therefore, this statistic is most useful for capturing the overall gait smoothness and balance. It also best reflects the differences observed in the plots. For example, participant d056 has the highest absolute mean (approximately 14°) and appears to show the greatest deviation from 0° in their plot. However, absolute mean only measures the average magnitude of deviation from upright and does not directly show how smoothly participants' gait changes across the 700 seconds.
 
 ```{r}
-
-load("~/Desktop/group3_data/gait.Rda")
-ls()
 View(gait_data)
 
 #check for missing data
@@ -529,17 +539,26 @@ gait_long <- gait_long |>  mutate(time = as.numeric(time))
 # plot each participant's gait measurements across the 700 seconds
 # horizontal line at 0 represents perfectly upright orientation
 
-ggplot( gait_long, aes(x = time, y= gait)) +
-  geom_line(linewidth = 0.3) + 
-  geom_hline(yintercept = 0, colour = "blue") + 
-  facet_wrap(~ donorid) +
-  theme_minimal() +
+ggplot(gait_long, aes(x = time, y = gait, colour = treatment)) +
+  geom_line(linewidth = 0.3) +
+  geom_hline(yintercept = 0, colour = "grey50") + # Mark upright orientation
+  facet_wrap(~donorid) +
+  scale_colour_manual(values = c(
+    "New compound" = "#D96B5F",
+    "L-DOPA control" = "#4C84A6"
+  )) +
   labs(
+    title = "Gait Orientation Over Time",
     x = "Time (seconds)",
-    y = "Vertical orientation (degrees off-axis)",
-    title = "Gait orientation over time for each participant"
+    y = "Vertical Orientation (Degrees Off-Axis)",
+    colour = "Treatment"
+  ) +
+  theme_classic(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold", size = 14),
+    axis.title = element_text(face = "bold")
   )
-
+  
 
 #calculate descriptive statistics for all participants
 
@@ -552,7 +571,6 @@ gait_summary <- gait_long |>
     min_gait = min(gait),
     max_gait = max(gait),
     absolute_mean = mean(abs(gait))
-    
   ) |>  
   ungroup()
   
@@ -653,7 +671,8 @@ lm(absolute_mean ~ treatment.x + age + exercise, data = joined_data) %>% summary
 common_donorid<-ca_co_genotypes |> 
   filter(
     donorid %in% gait_data$donorid,
-    donorid %in% dge$samples$donorid
+    donorid %in% dge$samples$donorid,
+    donorid %in% PRS$donorid
   )
 nrow(common_donorid)
 #there are 8 patients appear across all four arms of the study
@@ -666,24 +685,26 @@ nrow(common_donorid)
 dge_samples <- rownames_to_column(dge$samples, var = "sample")
 
 #joined dge_samples to mds_tibble to now include donorid in the tibble
-mds_tibble <- mds_tibble |> left_join(dge_samples |> dplyr::select(sample, donorid), by = "sample") 
+mds_tibble <- mds_tibble |> left_join(dge_samples |> dplyr::select(sample, donorid), by = "sample")  
 
-#WHAT OTHER FACTOR COULD BE AT PLAY? PGS, AGE, EXERCISE?
+#joined mds_tibble with gait_data 
+mds_tibble_joined <- mds_tibble |> left_join(gait_data |> dplyr::select(donorid, treatment, age, exercise), by = "donorid") 
 
 
-ggplot(mds_tibble, aes(x = x, y = y, colour = group)) +
+
+ggplot(mds_tibble_joined, aes(x = x, y = y, colour = exercise)) +
   geom_point(size = 3) + # show sample clustering
   geom_text_repel(aes(label = sample), size = 3, box.padding = 0.5,
                   point.padding = 0.2) + # label samples, reduce overlap between labels
   scale_colour_manual(values = c(
-    "case" = "#D96B5F",
-    "control" = "#4C84A6"
+    "y" = "#D96B5F",
+    "n" = "#4C84A6"
   )) + # Keep colours consistent across plots
   labs(
     title = "MDS Plot of Gene Expression",
     x = paste0("Leading logFC dimension 1 (", dim1_var_explained, "%)"),
     y = paste0("Leading logFC dimension 2 (", dim2_var_explained, "%)"),
-    colour = "Disease status"
+    colour = "Exercise status"
   ) +
   theme_classic(base_size = 12) +
   theme(
@@ -773,7 +794,7 @@ shapiro.test(lm_model_PRSxtreatment_gait$residuals)#Normality of residuals: The 
 
 5.  In a paragraph, summarise your findings and suggest directions for future research.
 
-clinical trial summary:
+Clinical trial summary:
 
 The clinical trial analysis shows that participants receiving the new compound had lower mean absolute gait measurements than those receiving L-DOPA. Both age and exercise were found to be associated with mean absolute gait. However, even after adjusting for these factors, the relationship between treatment and mean absolute gait remained statistically significant. This suggests that the new compound is associated with smaller average deviations from upright compared to the standard care (L-DOPA).
 
