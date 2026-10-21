@@ -42,7 +42,7 @@ longer_ca_co_genotypes <- ca_co_genotypes |>
 One_locus_score <- longer_ca_co_genotypes |> 
   mutate(
     one_locus_score = risk_genotype_dosage*beta
-  # )
+    )
 #calculate the locus score for each individual locus
 PRS<-One_locus_score |> 
   summarise(
