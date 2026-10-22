@@ -859,7 +859,11 @@ shapiro.test(lm_model_PRSxtreatment_gait$residuals)#Normality of residuals: The 
 
 5.  In a paragraph, summarise your findings and suggest directions for future research.
 
-Clinical trial summary:
+**RNA seq. Summary**
+
+RNA-seq identified 39 differentially expressed genes at a 5% false discovery rate: the supplied GO annotations linked 21 upregulated genes to oxidative stress responses and 18 downregulated genes to synaptic transmission. Expression clustering also corresponded with PRS, with three lower-PRS cases clustering alongside controls, suggesting heterogeneity among patients.
+
+**Clinical Trial Summary:**
 
 The clinical trial analysis shows that participants receiving the new compound had lower mean absolute gait measurements than those receiving L-DOPA. Both age and exercise were found to be associated with mean absolute gait. However, even after adjusting for these factors, the relationship between treatment and mean absolute gait remained statistically significant. This suggests that the new compound is associated with smaller average deviations from upright compared to the standard care (L-DOPA).
 
