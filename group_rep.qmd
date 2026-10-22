@@ -632,8 +632,13 @@ The p value (0.03503) is smaller than 0.05, suggesting that there is a statistic
 
 # 1. visualise data and check for equal variances between the 2 treatment groups
 
-ggplot(gait_summary, aes(x = treatment, y = absolute_mean)) +
-  geom_boxplot() 
+ggplot(gait_summary, aes(x = treatment, y = absolute_mean, fill = treatment)) +
+  geom_boxplot() +
+  scale_fill_manual(values = c(
+    "New compound" = "#D96B5F",
+    "L-DOPA control" = "#4C84A6"
+  )) 
+  
 
 
 # 2. check for normality in both groups
@@ -729,24 +734,24 @@ dge_samples <- rownames_to_column(dge$samples, var = "sample")
 #joined dge_samples to mds_tibble to now include donorid in the tibble
 mds_tibble <- mds_tibble |> left_join(dge_samples |> dplyr::select(sample, donorid), by = "sample")  
 
-#joined mds_tibble with gait_data 
-mds_tibble_joined <- mds_tibble |> left_join(gait_data |> dplyr::select(donorid, treatment, age, exercise), by = "donorid") 
+#joined mds_tibble with PRS data 
+mds_tibble_joined <- mds_tibble |> left_join(PRS |> dplyr::select(donorid, Polygenic_risk_score), by = "donorid") 
 
 
 
-ggplot(mds_tibble_joined, aes(x = x, y = y, colour = exercise)) +
+P10 <- ggplot(mds_tibble_joined, aes(x = x, y = y, colour = Polygenic_risk_score)) +
   geom_point(size = 3) + # show sample clustering
   geom_text_repel(aes(label = sample), size = 3, box.padding = 0.5,
                   point.padding = 0.2) + # label samples, reduce overlap between labels
-  scale_colour_manual(values = c(
-    "y" = "#D96B5F",
-    "n" = "#4C84A6"
-  )) + # Keep colours consistent across plots
+  scale_colour_gradient(
+    low = "#D96B5F",
+    high = "#4C84A6"
+  ) + # Keep colours consistent across plots
   labs(
-    title = "MDS Plot of Gene Expression",
+    title = "MDS Plot of Gene Expression and Polygenic Risk Score",
     x = paste0("Leading logFC dimension 1 (", dim1_var_explained, "%)"),
     y = paste0("Leading logFC dimension 2 (", dim2_var_explained, "%)"),
-    colour = "Exercise status"
+    colour = "Polygenic Risk Score"
   ) +
   theme_classic(base_size = 12) +
   theme(
@@ -754,6 +759,7 @@ ggplot(mds_tibble_joined, aes(x = x, y = y, colour = exercise)) +
     axis.title = element_text(face = "bold"),
     axis.text = element_text(colour = "black")
   )
+ggsave("Figures/MDS Plot of Gene Expression and Polygenic Risk Score.png", plot = P10)
 ```
 
 3.  Are any of the gene targets of hit compounds from the drug screen, differentially expressed in RNA-seq? Which GO terms are they associated with and what might this tell you about the pathology of PD?
