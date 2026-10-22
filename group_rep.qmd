@@ -317,7 +317,7 @@ top_de_gene_ontology |> slice_min(p_value, n = 39) |> dplyr::select(gene, status
 
 3.  Is the clustering of samples by gene expression consistent with their disease status as cases and controls?
 
-    From this multi-dimensional scale (MDS) plot, we can see that 5/8 cases cluster together on the left, and all the controls cluster to the right. Interestingly, 3/8 cases cluster to the left where the controls are. This raises concerns about a potential batch effect or mislabeling of samples, as the clustering of samples by gene expression is not always consistent with disease status.
+    From this multi-dimensional scale (MDS) plot, we can see that 5/8 cases cluster together on the left, and all the controls cluster to the right. Interestingly, 3/8 cases cluster to the left where the controls are.
 
 ```{r}
 #Now we want to check that our samples group together as we'd expect based on our experimental design, by making an MDS plot. This will show us whether or not the controls group together, and the PD patients group together. To do this, we will use the plotMDS() function and then make the MDS plot in ggplot2
