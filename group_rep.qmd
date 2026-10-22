@@ -867,7 +867,7 @@ PD cases tended to have higher PRS than controls (Wilcoxon p = 1.013 × 10⁻⁸
 
 **RNA seq. Summary**
 
-RNA-seq identified 39 differentially expressed genes at a 5% false discovery rate: the supplied GO annotations linked 21 upregulated genes to oxidative stress responses and 18 downregulated genes to synaptic transmission. Expression clustering also corresponded with PRS, with three lower-PRS cases clustering alongside controls, suggesting heterogeneity among patients.
+RNA-seq identified 39 differentially expressed genes at a 5% false discovery rate: the supplied GO annotations linked 21 upregulated genes to oxidative stress responses and 18 downregulated genes to synaptic transmission. Expression clustering also corresponded with PRS, with three lower-PRS cases clustering alongside controls, suggesting heterogeneity among patients. Future research would validate these findings in larger, diverse cohorts.
 
 **Drug screening:**
 
@@ -877,7 +877,7 @@ The luminescence heatmap showed no obvious spatial gradient or edge effect. Welc
 
 The clinical trial analysis shows that participants receiving the new compound had lower mean absolute gait measurements than those receiving L-DOPA. Both age and exercise were found to be associated with mean absolute gait. However, even after adjusting for these factors, the relationship between treatment and mean absolute gait remained statistically significant. This suggests that the new compound is associated with smaller average deviations from upright compared to the standard care (L-DOPA).
 
-future research: Since the trial only has 16 participants, larger studies are needed to determine is these findings are consistent within the more general population of PD patients. Additionally, along with age and exercise, future research can also investigate other gait-affecting factors such as disease severity or drug dosage.
+Future research: Since the trial only has 16 participants, larger studies are needed to determine is these findings are consistent within the more general population of PD patients. Additionally, along with age and exercise, future research can also investigate other gait-affecting factors such as disease severity or drug dosage.
 
 ```{r}
 
