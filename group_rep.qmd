@@ -556,6 +556,7 @@ The participants' mean gait measurements across the 700 seconds ranges from appr
 Absolute mean gait measurements range from approximately 2° to 14°, indicating that the average magnitude of deviation from upright is greater than the mean values suggest. This is because absolute mean accounts for the magnitude of deviations regardless of direction and prevents positive and negative values to cancel each other, as can happen with mean calculations. Therefore, this statistic is most useful for capturing the overall gait smoothness and balance. It also best reflects the differences observed in the plots. For example, participant d056 has the highest absolute mean (approximately 14°) and appears to show the greatest deviation from 0° in their plot. However, absolute mean only measures the average magnitude of deviation from upright and does not directly show how smoothly participants' gait changes across the 700 seconds.
 
 ```{r}
+
 View(gait_data)
 
 #check for missing data
