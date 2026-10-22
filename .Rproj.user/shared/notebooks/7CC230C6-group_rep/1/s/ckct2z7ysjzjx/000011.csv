@@ -1,0 +1,2 @@
+"0","PRS |> "
+"0","  slice_min(Polygenic_risk_score, n = 1) #participant with the lowest PRS"

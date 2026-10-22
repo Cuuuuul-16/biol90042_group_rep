@@ -10,11 +10,11 @@ Load dataset:
 
 ```{r}
 library(tidyverse)
-drugscreen <- load("group3_data/drugscreen.Rda")
-gait<- load("group3_data/gait.Rda")
-prs<- load("group3_data/prs.Rda")
-rnaseq<- load("group3_data/rnaseq.Rda")
-rnaseq_gene_info<- load("group3_data/rnaseq_gene_info.Rda")
+drugscreen <- load("~/Desktop/biol90042_group_rep/drugscreen.Rda")
+gait<- load("~/Desktop/biol90042_group_rep/gait.Rda")
+prs<- load("~/Desktop/biol90042_group_rep/prs.Rda")
+rnaseq<- load("~/Desktop/biol90042_group_rep/rnaseq.Rda")
+rnaseq_gene_info<- load("~/Desktop/biol90042_group_rep/rnaseq_gene_info.Rda")
 ```
 
 ### **23.3.1 Population genetics**
@@ -65,6 +65,7 @@ PRS |>
     sd_PRS = sd(Polygenic_risk_score),
     .by = status
   ) # descriptive statistics of the distribution of PRS for both cases and controls
+
 ggplot(
   data = PRS,
   aes(x = Polygenic_risk_score, fill = status))+
@@ -92,13 +93,52 @@ ggplot(
     axis.text = element_text(colour = "black") # use black axis text for clear contrast
   )
 
+#create density plot to visualise the distribution of PRS based on the status
+ggplot(PRS, aes(x = Polygenic_risk_score, fill = status, colour = status)) +
+  geom_density(
+    alpha = 0.4,
+    linewidth = 1
+  ) +
+  scale_fill_manual(
+    values = c("case" = "#D96B5F", "ctrl" = "#4C84A6")
+  ) +
+  scale_colour_manual(
+    values = c("case" = "#D96B5F", "ctrl" = "#4C84A6")
+  ) +
+  labs(
+    title = "Distribution of Polygenic Risk Scores by Disease Status",
+    x = "Polygenic risk score (PRS)",
+    y = "Density",
+    fill = "Disease status",
+    colour = "Disease status"
+  ) +
+  theme_classic(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold", size = 14),
+    axis.title = element_text(face = "bold"),
+    axis.text = element_text(colour = "black"),
+    legend.position = "right"
+  )
+
+PRS_jitter <- PRS %>%
+  group_by(status) %>%
+  filter(
+    Polygenic_risk_score >= quantile(Polygenic_risk_score, 0.25) - 1.5 * IQR(Polygenic_risk_score),
+    Polygenic_risk_score <= quantile(Polygenic_risk_score, 0.75) + 1.5 * IQR(Polygenic_risk_score)
+  ) %>%
+  ungroup()
+
 ggplot(PRS, aes(x = status, y = Polygenic_risk_score, fill = status)) +
-  geom_boxplot(
+  geom_boxplot(    
     width = 0.5,
     alpha = 0.85,
     outlier.shape = 21,
     outlier.size = 2
   ) +
+  geom_jitter(
+  data = PRS_jitter,
+  width = 0.15,
+  alpha = 0.5)+
   scale_fill_manual(
   values = c("case" = "#D96B5F", "ctrl" = "#4C84A6") # set consistent colours for cases and controls
 ) +
@@ -115,8 +155,8 @@ theme(
   axis.text = element_text(colour = "black") # set axis text to black
 )
 
-#case group have higher mean and median PRS, with slightly greater standard deviation (variation) compare to the control group. The distributions of both group overlap substantially, hence the PRS cannot be perfectly distinguish case from control.
-#both disttibution are unimodal and symmetric, and both have two outliers, case outliers have the lowest PRS and the control outliers have the higher PRS
+#case group have higher mean and median PRS, with slightly greater standard deviation (variation) compare to the control group.
+#both distribution are approximately unimodal with control is a bit positively skewed, and both have two outliers, case outliers have the lowest PRS and the control outliers have the higher PRS. The distributions of both group overlap substantially, hence the PRS cannot be perfectly distinguish case from control.
 ```
 
 3.  Is there a statistically significant difference in the PRS of cases and controls? Ensure you check all the assumptions of the test you choose.
@@ -148,6 +188,10 @@ PRS |>
 # for ctrl, the p value is 0.007452, strong evidence against normality
 # to do a t-test, both group need to meet the normality assumption, since the ctrl group has violated the assumption, Wilcoxon rank-sum test will be applied here to compare the two groups instead of t-test.
 
+#check independence
+PRS |> summarise(n = n(), .by = donorid) |> filter(n > 1)
+#there is no rows appear, each donor ID contributes only one observations, and assuming participants were unrelated and sampled independently, the independence is met
+
 wilcox.test(Polygenic_risk_score ~ status, data = PRS)
 # the wilcoxon test statistics value is 15554 with a p-value of 1.013e-08. This suggests a extremely strong evidence that the PRS distribution differ between the Parkinson disease case group and the control group, with case group have higher PRS compare to the control group.
 ```
@@ -171,12 +215,10 @@ library(ggrepel)
 ```{r}
 # Firstly, we need to filter our lowly expressed genes to increase our statistical power. To do this, we will use the filterByExpr() function in the edgeR package. This will keep genes with a count of 10 or more in at least 8 samples (as we have 8 samples per group)
   keep <- filterByExpr(dge)
-  
 # to apply this filter to the DGE object, we will use [] to filter out FALSE hits (lowly expressed genes) and assign this dge
   dge <- dge[keep, , keep.lib.sizes = FALSE]
 
 # Now we need to normalise our data by converting it to counts per million (CPM), so we can compare samples and groups, and account for RNA composition bias. To do this we will use the TMM method to calculate the normalisation factor for each sample. normLibSizes() function can be used to calculate normalisation factors
-  
   dge <- normLibSizes(dge, method = "TMM")
 # the normalisation factors in dge$samples are close to 1 in all samples, suggesting minimal difference in RNA composition between samples
 
@@ -191,8 +233,8 @@ library(ggrepel)
   # Now make contrast matrix
   contr_matrix <- makeContrasts(
     CasevsControl = "Case - Control",
-    levels = design)
-  
+    levels = design
+  )
   # creates mean-variance relationship plot to check voom
   v <- voom(dge, design, plot = TRUE)
   
@@ -205,7 +247,7 @@ library(ggrepel)
   # statistical test: emnpirical bayes moderated T-test
   efit <- eBayes(vfit)
   
-  #decide tests function to decide if a gene is differentially expressed or not with multiple    testing correction
+  #decide tests function to decide if a gene is differentially expressed or not with multiple testing correction
   dt <- decideTests(efit)
   
   top <- topTable(efit, coef = "CasevsControl", number = Inf)
@@ -228,23 +270,24 @@ library(ggrepel)
                        gene = efit$genes$SYMBOL,
                       p_value = efit$p.value[, "CasevsControl"])
 
-  ma_plot_data_fct <- ma_plot_data %>%
-    mutate(
+ma_plot_data_fct <- ma_plot_data %>%
+  mutate(
     # replace status with a new factor
     status = factor(
       status,
       # levels (order is not DE, down, up)
       levels = c(0, -1, 1),
       # labels for the numbers so they are readble
-      labels = c("Not DE", "Down", "Up")))
-  
+      labels = c("Not DE", "Down", "Up")
+    )
+  )
 # labelling of top most significant genes
 top_10_de_genes <- ma_plot_data_fct %>%
   filter(!is.na(gene)) %>%
   slice_min(p_value, n = 10)
 
 # MA ggplot
-p1 <- ggplot(ma_plot_data_fct, aes(x = AvgExpr, y = logFC, colour = status)) +
+ggplot(ma_plot_data_fct, aes(x = AvgExpr, y = logFC, colour = status)) +
   geom_point(size = 1) +
   geom_label_repel(
     data = top_10_de_genes,
@@ -263,10 +306,6 @@ p1 <- ggplot(ma_plot_data_fct, aes(x = AvgExpr, y = logFC, colour = status)) +
     colour = "Expression status"
   ) +
   theme_classic() # Keep the plot style consistent
-  p1
-  #save plot
-  ggsave("Figures/MA_plot.png", plot = p1)
-
 
 # Volcano Plot
 ggplot(ma_plot_data_fct, aes(x = logFC, y = -log10(p_value), colour = status)) +
@@ -317,7 +356,7 @@ top_de_gene_ontology |> slice_min(p_value, n = 39) |> dplyr::select(gene, status
 
 3.  Is the clustering of samples by gene expression consistent with their disease status as cases and controls?
 
-    From this multi-dimensional scale (MDS) plot, we can see that 5/8 cases cluster together on the left, and all the controls cluster to the right. Interestingly, 3/8 cases cluster to the left where the controls are.
+    From this multi-dimensional scale (MDS) plot, we can see that 5/8 cases cluster together on the left, and all the controls cluster to the right. Interestingly, 3/8 cases cluster to the left where the controls are. This raises concerns about a potential batch effect or mislabeling of samples, as the clustering of samples by gene expression is not always consistent with disease status.
 
 ```{r}
 #Now we want to check that our samples group together as we'd expect based on our experimental design, by making an MDS plot. This will show us whether or not the controls group together, and the PD patients group together. To do this, we will use the plotMDS() function and then make the MDS plot in ggplot2
@@ -687,20 +726,24 @@ dge_samples <- rownames_to_column(dge$samples, var = "sample")
 #joined dge_samples to mds_tibble to now include donorid in the tibble
 mds_tibble <- mds_tibble |> left_join(dge_samples |> dplyr::select(sample, donorid), by = "sample")  
 
-#joined mds_tibble with PRS data
-mds_tibble_joined <- mds_tibble |> left_join(PRS |> dplyr::select(donorid, Polygenic_risk_score), by = "donorid") 
+#joined mds_tibble with gait_data 
+mds_tibble_joined <- mds_tibble |> left_join(gait_data |> dplyr::select(donorid, treatment, age, exercise), by = "donorid") 
 
-#plot of MDS with colour gradient of PRS 
-ggplot(mds_tibble_joined, aes(x = x, y = y, colour = Polygenic_risk_score)) +
+
+
+ggplot(mds_tibble_joined, aes(x = x, y = y, colour = exercise)) +
   geom_point(size = 3) + # show sample clustering
   geom_text_repel(aes(label = sample), size = 3, box.padding = 0.5,
                   point.padding = 0.2) + # label samples, reduce overlap between labels
-  scale_colour_gradient(low = "#D96B5F",high = "#4C84A6") + # Keep colours consistent across plots
+  scale_colour_manual(values = c(
+    "y" = "#D96B5F",
+    "n" = "#4C84A6"
+  )) + # Keep colours consistent across plots
   labs(
     title = "MDS Plot of Gene Expression",
     x = paste0("Leading logFC dimension 1 (", dim1_var_explained, "%)"),
     y = paste0("Leading logFC dimension 2 (", dim2_var_explained, "%)"),
-    colour = "Polygenic Risk Score"
+    colour = "Exercise status"
   ) +
   theme_classic(base_size = 12) +
   theme(
