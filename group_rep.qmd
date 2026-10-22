@@ -189,8 +189,8 @@ library(ggrepel)
   # Now make contrast matrix
   contr_matrix <- makeContrasts(
     CasevsControl = "Case - Control",
-    levels = design
-  )
+    levels = design)
+  
   # creates mean-variance relationship plot to check voom
   v <- voom(dge, design, plot = TRUE)
   
@@ -203,7 +203,7 @@ library(ggrepel)
   # statistical test: emnpirical bayes moderated T-test
   efit <- eBayes(vfit)
   
-  #decide tests function to decide if a gene is differentially expressed or not with multiple testing correction
+  #decide tests function to decide if a gene is differentially expressed or not with multiple    testing correction
   dt <- decideTests(efit)
   
   top <- topTable(efit, coef = "CasevsControl", number = Inf)
@@ -215,7 +215,7 @@ library(ggrepel)
   
   # turning efit$genes into character
   efit$genes$genes <- as.character(efit$genes$genes)
-  # so I can now change efit$genes to include SYMBOL column which matches the entrez_genename_key#entrezid to efit$genes$genes, and supplies the entrez_genename_key$gene_name to the efit$genes dataframe
+  # so I can now change efit$genes to include SYMBOL column which matches the                    entrez_genename_key#entrezid to efit$genes$genes, and supplies the                             entrez_genename_key$gene_name to the efit$genes dataframe
   efit$genes$SYMBOL <- entrez_genename_key$gene_name[
     match(efit$genes$genes, entrez_genename_key$entrezid)]
 
@@ -226,24 +226,23 @@ library(ggrepel)
                        gene = efit$genes$SYMBOL,
                       p_value = efit$p.value[, "CasevsControl"])
 
-ma_plot_data_fct <- ma_plot_data %>%
-  mutate(
+  ma_plot_data_fct <- ma_plot_data %>%
+    mutate(
     # replace status with a new factor
     status = factor(
       status,
       # levels (order is not DE, down, up)
       levels = c(0, -1, 1),
       # labels for the numbers so they are readble
-      labels = c("Not DE", "Down", "Up")
-    )
-  )
+      labels = c("Not DE", "Down", "Up")))
+  
 # labelling of top most significant genes
 top_10_de_genes <- ma_plot_data_fct %>%
   filter(!is.na(gene)) %>%
   slice_min(p_value, n = 10)
 
 # MA ggplot
-ggplot(ma_plot_data_fct, aes(x = AvgExpr, y = logFC, colour = status)) +
+p1 <- ggplot(ma_plot_data_fct, aes(x = AvgExpr, y = logFC, colour = status)) +
   geom_point(size = 1) +
   geom_label_repel(
     data = top_10_de_genes,
@@ -262,6 +261,9 @@ ggplot(ma_plot_data_fct, aes(x = AvgExpr, y = logFC, colour = status)) +
     colour = "Expression status"
   ) +
   theme_classic() # Keep the plot style consistent
+  
+  #save plot
+  ggsave("Figures/MA_plot", plot = p1)
 
 # Volcano Plot
 ggplot(ma_plot_data_fct, aes(x = logFC, y = -log10(p_value), colour = status)) +
