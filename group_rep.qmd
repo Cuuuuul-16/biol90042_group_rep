@@ -215,7 +215,7 @@ library(ggrepel)
 
 1.  Which genes are differentially expressed between PD cases and healthy controls? Please also visualise your DE results with appropriate plot(s).
 
-    The top 5 upregulated DEG's in PD cases compared to healthy controls are TXNRD2, MSRB2, APOE, SRXN1, and ERCC3. The top 5 downregulated DEG's in PD cases vs controls were RIT2, MAPK1, APBA3, LRP6, and LARGE1.
+    The top 5 upregulated DEG's in PD cases compared to healthy controls are TXNRD2, MSRB2, APOE, SRXN1, and ERCC3. The top 5 downregulated DEG's in PD cases vs controls were RIT2, MAPK1, APBA3, LRP6, and LARGE1. Notably, one DE gene showed up as NA as its entrez id did not match up to any genes.
 
 ```{r}
 # Firstly, we need to filter our lowly expressed genes to increase our statistical power. To do this, we will use the filterByExpr() function in the edgeR package. This will keep genes with a count of 10 or more in at least 8 samples (as we have 8 samples per group)
@@ -277,7 +277,7 @@ library(ggrepel)
     adj_p   = top$adj.P.Val
   )
 
-ma_plot_data_fct <- ma_plot_data |> na.omit() |> 
+ma_plot_data_fct <- ma_plot_data |> 
   mutate(
     # replace status with a new factor
     status = factor(
@@ -739,7 +739,7 @@ nrow(common_donorid)
 
 2.  Do any variables other than gene expression distinguish the RNA-seq cases from controls? (Hint: try colouring points on your MDS plot by other information you have about the donors, from the other datasets)
 
-Polygenic risk scores seem to distinguish the RNA-seq cases from controls in this MDS plot.
+Polygenic risk scores seem to distinguish the RNA-seq cases from controls in this MDS plot. With high PRS patients clustering to the left of the plot and low PRS to the right.
 
 ```{r}
 #changed dge$samples so that the row names case/control# are now a column within the dataframe
@@ -777,6 +777,8 @@ P10
 
 3.  Are any of the gene targets of hit compounds from the drug screen, differentially expressed in RNA-seq? Which GO terms are they associated with and what might this tell you about the pathology of PD?
 
+All of the gene targets of hit compounds are downregulated in RNA seq. and are all associated with synaptic transmission. This potentially indicates that targeting synaptic transmission may increase neuronal viability.
+
 ```{r}
 ma_plot_data_fct |> 
   filter(gene %in% c("MAPK1", "LRP6", "RIT2", "APBA3"))
@@ -785,8 +787,9 @@ targeted_genes <- entrez_genename_key |>
   filter(gene_name %in% c("MAPK1", "LRP6", "RIT2", "APBA3"))
 
 target_go <- gene_ontology |> 
-  filter(entrezgene_id %in% targeted_genes$entrezid)
-View(target_go)
+  filter(entrezgene_id %in% targeted_genes$entrezid) 
+target_go
+
 ```
 
 4.  Is there any relationship between the PRS and gait of patients in the clinical trial?
@@ -861,23 +864,7 @@ shapiro.test(lm_model_PRSxtreatment_gait$residuals)#Normality of residuals: The 
 
 5.  In a paragraph, summarise your findings and suggest directions for future research.
 
-**PRS Summary**
-
-PD cases tended to have higher PRS than controls (Wilcoxon p = 1.013 × 10⁻⁸), supporting an association between genetic risk and PD status, although substantial overlap showed that PRS could not perfectly distinguish individuals with and without PD.
-
-**RNA seq. Summary**
-
-RNA-seq identified 39 differentially expressed genes at a 5% false discovery rate: the supplied GO annotations linked 21 upregulated genes to oxidative stress responses and 18 downregulated genes to synaptic transmission. Expression clustering also corresponded with PRS, with three lower-PRS cases clustering alongside controls, suggesting heterogeneity among patients. Future research would validate these findings in larger, diverse cohorts.
-
-**Drug screening:**
-
-The luminescence heatmap showed no obvious spatial gradient or edge effect. Welch’s t-tests with Benjamini–Hochberg correction identified four compounds (cmpd_5386, cmpd_5118, cmpd_7466 and cmpd_6972) that significantly increased neuronal viability after MPP exposure (adjusted *p* \< 0.05). QQ plots showed no obvious deviations from normality, although the small sample size (four technical replicates per group) limited assessment. All four corresponding gene targets (MAPK1, LRP6, RIT2 and APBA3) were significantly downregulated in PD RNA-seq data (adjusted *p* \< 0.001), suggesting potential alterations in neuronal signalling and cellular homeostasis. Further GO analysis is needed to clarify the biological processes involved.
-
-**Clinical Trial Summary:**
-
-The clinical trial analysis shows that participants receiving the new compound had lower mean absolute gait measurements than those receiving L-DOPA. Both age and exercise were found to be associated with mean absolute gait. However, even after adjusting for these factors, the relationship between treatment and mean absolute gait remained statistically significant. This suggests that the new compound is associated with smaller average deviations from upright compared to the standard care (L-DOPA).
-
-Future research: Since the trial only has 16 participants, larger studies are needed to determine is these findings are consistent within the more general population of PD patients. Additionally, along with age and exercise, future research can also investigate other gait-affecting factors such as disease severity or drug dosage.
+The PRS analysis showed significantly higher scores in PD cases than controls (Wilcoxon p = 1.013 × 10⁻⁸), supporting an association between genetic risk and PD status. However, substantial score overlap limited its ability to distinguish individuals with and without PD. RNA-seq identified 39 differentially expressed genes at a 5% false discovery rate, with GO annotations linking 21 upregulated genes to oxidative stress responses and 18 downregulated genes to synaptic transmission. Three lower-PRS cases clustered with controls, suggesting patient heterogeneity; these findings require validation in larger, more diverse cohorts. Drug screening identified four compounds (cmpd_5386, cmpd_5118, cmpd_7466 and cmpd_6972) that significantly increased neuronal viability after MPP exposure (adjusted p \< 0.05). Although QQ plots showed no obvious deviations from normality, only four technical replicates per group limited assessment of this assumption. Their corresponding targets (MAPK1, LRP6, RIT2 and APBA3) were significantly downregulated in PD RNA-seq data (adjusted p \< 0.001), but further GO analysis is needed to clarify the biological relevance of these findings. In the clinical trial, the new compound was associated with lower mean absolute gait measurements than L-DOPA after adjustment for age and exercise. However, with only 16 participants, the findings may not generalise to the wider PD population. Larger trials should validate the treatment effect and investigate additional gait-related factors, including disease severity and drug dosage.
 
 ```{r}
 
