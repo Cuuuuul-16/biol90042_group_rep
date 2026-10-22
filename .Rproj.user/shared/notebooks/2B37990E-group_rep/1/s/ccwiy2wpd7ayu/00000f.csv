@@ -1,9 +1,0 @@
-"0","#use top_de_genes, join gene_ontology"
-"0","#first join top_de_genes with entrez_id"
-"0","top_de_genes <- ma_plot_data_fct |> "
-"0","  filter(!is.na(gene)) |>  "
-"0","  slice_min(p_value, n = 39) |> "
-"0","  mutate(gene_name = gene)"
-"2","Error in mutate(slice_min(filter(ma_plot_data_fct, !is.na(gene)), p_value,  : 
-  could not find function ""mutate""
-"

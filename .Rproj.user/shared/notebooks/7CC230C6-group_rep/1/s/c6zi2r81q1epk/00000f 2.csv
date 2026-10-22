@@ -1,0 +1,2 @@
+"0","#Now we want to check that our samples group together as we'd expect based on our experimental design, by making an MDS plot. This will show us whether or not the controls group together, and the PD patients group together. To do this, we will use the plotMDS() function and then make the MDS plot in ggplot2"
+"0","mds_result <- plotMDS(dge)"

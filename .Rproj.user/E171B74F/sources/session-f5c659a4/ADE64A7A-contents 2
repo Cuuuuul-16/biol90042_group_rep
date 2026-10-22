@@ -1,0 +1,213 @@
+---
+title: "23.3.5: Linking between datasets — Q1, Q4 and Q5"
+format: html
+---
+
+Copy the relevant blocks into `group_rep.qmd` after running the earlier analyses. All R functions used below appear in your seven workshop files.
+
+**1. Using their unique donor IDs, how many patients appear across all four arms of the study?**
+
+The exact count cannot be calculated from the supplied report. The drug-screen donor IDs are not shown, and RNA-seq sample names have not been confirmed as donor IDs. `drugscreen.Rda` and `rnaseq.Rda` are needed to finish the two donor-ID assignments below. Do not use well IDs, compound IDs or unverified sample names as donor IDs.
+
+These commands show the object names loaded by the report and the RNA-seq metadata:
+
+```{r}
+#| eval: false
+drugscreen
+rnaseq
+head(dge$samples)
+colnames(dge)
+head(plate_meta)
+library(tidyverse)
+drugscreen <- load("C:/Users/wumin/OneDrive - The University of Melbourne/Master of Biomedical Science/1st year 1st sem/BIOL90042/group_rep/group3_data/drugscreen.Rda")
+gait<- load("C:/Users/wumin/OneDrive - The University of Melbourne/Master of Biomedical Science/1st year 1st sem/BIOL90042/group_rep/group3_data/gait.Rda")
+prs<- load("C:/Users/wumin/OneDrive - The University of Melbourne/Master of Biomedical Science/1st year 1st sem/BIOL90042/group_rep/group3_data/prs.Rda")
+rnaseq<- load("C:/Users/wumin/OneDrive - The University of Melbourne/Master of Biomedical Science/1st year 1st sem/BIOL90042/group_rep/group3_data/rnaseq.Rda")
+rnaseq_gene_info<- load("C:/Users/wumin/OneDrive - The University of Melbourne/Master of Biomedical Science/1st year 1st sem/BIOL90042/group_rep/group3_data/rnaseq_gene_info.Rda")
+```
+
+The following is a template until `rnaseq_donor_ids` and `drugscreen_donor_ids` have been assigned the verified donor-ID vectors. It counts donors present in every arm, counting each donor once even if their ID occurs in multiple rows.
+
+```{r}
+#| eval: false
+# First assign rnaseq_donor_ids and drugscreen_donor_ids
+# from the verified donor metadata in the two datasets.
+
+common_patients <- ca_co_genotypes |>
+  filter(
+    !is.na(donorid),
+    donorid %in% gait_data$donorid,
+  ) |>
+  summarise(n_genotype_rows = n(), .by = donorid)
+
+# List the shared donor IDs.
+common_patients |>
+  select(donorid)
+
+# Count unique donors shared by all four arms.
+common_patients |>
+  summarise(n_patients = n())
+```
+
+**4. Is there any relationship between the PRS and gait of patients in the clinical trial?**
+
+First correct the PRS calculation. The existing multiplication by `gwas_top_hits$beta` recycles the beta vector through the genotype table; it does not assign each locus its own beta. Match by locus before multiplying. This uses the pivoting, joining and grouped summaries taught in the workshops.
+
+```{r}
+# Calculate a correctly weighted PRS for each donor.
+PRS_filtered <- ca_co_genotypes |>
+  pivot_longer(
+    cols = starts_with("locus_"),
+    names_to = "locus",
+    values_to = "genotype"
+  ) |>
+  left_join(
+    gwas_top_hits |> select(locus, beta),
+    by = join_by(locus)
+  ) |>
+  mutate(weighted_score = genotype * beta) |>
+  summarise(
+    PRS = sum(weighted_score),
+    .by = c(donorid, status)
+  )
+# Replace the PRS calculation in 23.3.1 and rerun its analyses too.
+
+gait_long <- gait_data |> 
+  pivot_longer(
+    cols = contains("_sec"), 
+    names_to = "time", 
+    values_to = "gait"
+  )   
+ 
+  
+  # separate values in "time" column from units and make them into numeric character
+  
+gait_long <- gait_long |>  separate(
+    time, 
+    into = c("time", "units"), 
+    sep = "_"
+  ) 
+  
+gait_long <- gait_long |>  mutate(time = as.numeric(time)) 
+  class(gait_long$time)
+
+
+# plot each participant's gait measurements across the 700 seconds
+# horizontal line at 0 represents perfectly upright orientation
+
+ggplot( gait_long, aes(x = time, y= gait)) +
+  geom_line(linewidth = 0.3) + 
+  geom_hline(yintercept = 0, colour = "blue") + 
+  facet_wrap(~ donorid) +
+  labs(
+    x = "Time (seconds)",
+    y = "Vertical orientation (degrees off-axis)",
+    title = "Gait orientation over time for each participant"
+  )
+
+
+#calculate descriptive statistics for all participants
+
+gait_summary <- gait_long |> 
+  group_by(donorid, treatment) |> 
+  summarise(
+    mean_gait = mean(gait),
+    median_gait = median(gait), 
+    stand.dev_gait = sd(gait),
+    min_gait = min(gait),
+    max_gait = max(gait),
+    absolute_mean = mean(abs(gait))
+    
+  ) |>  
+  ungroup()
+# Keep one gait summary per participant, then join their clinical
+# information and PRS using donorid.
+gait_prs_all <- gait_summary |>
+  select(donorid, absolute_mean) |>
+  left_join(
+    gait_data |> select(donorid, treatment, age, exercise),
+    by = join_by(donorid)
+  ) |>
+  left_join(
+    PRS_filtered |> select(donorid, PRS),
+    by = join_by(donorid)
+  )
+
+# Show how many trial participants lack a usable PRS.
+gait_prs_all |>
+  summarise(
+    n_trial_rows = n(),
+    n_missing_PRS = sum(is.na(PRS))
+  )
+
+# These six columns are all needed for the adjusted analysis.
+# Remove rows missing any of these values.
+gait_prs <- gait_prs_all |> na.omit()
+
+gait_prs |>
+  summarise(n_complete_rows = n())
+
+# This should return no rows: each donor should occur once.
+# If duplicates appear, resolve them before fitting the models.
+gait_prs |>
+  summarise(n_rows = n(), .by = donorid) |>
+  filter(n_rows > 1)
+
+# Visualise the relationship, with treatment groups distinguished.
+ggplot(gait_PRS, aes(x = Polygenic_risk_score, y = absolute_mean, colour = treatment)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(
+    title = "Relationship between PRS and gait in the clinical trial",
+    x = "Polygenic risk score",
+    y = "Mean absolute deviation from upright (degrees)",
+    colour = "Treatment"
+  ) +
+  theme_minimal()
+
+# Spearman correlation: an unadjusted test of a monotonic association.
+# Inspect the scatterplot to assess whether this is a useful summary.
+cor.test(gait_prs$PRS, gait_prs$absolute_mean, method = "spearman")
+
+# Unadjusted linear relationship.
+prs_gait_unadjusted <- lm(absolute_mean ~ Polygenic_risk_score, data = gait_PRS)
+summary(prs_gait_unadjusted)
+
+# Adjust for treatment, age and exercise.
+prs_gait_adjusted <- lm(
+  absolute_mean ~ Polygenic_risk_score + treatment + age + exercise,
+  data = gait_PRS
+)
+summary(prs_gait_adjusted)
+
+# Check the adjusted model's residuals.
+model_checks <- tibble(
+  fitted = prs_gait_adjusted$fitted.values,
+  residual = prs_gait_adjusted$residuals
+)
+
+# Look for curvature, a funnel-shaped spread or extreme residuals.
+ggplot(model_checks, aes(x = fitted, y = residual)) +
+  geom_point() +
+  geom_hline(yintercept = 0) +
+  labs(x = "Fitted gait value", y = "Residual") +
+  theme_minimal()
+
+# Check approximate normality of residuals, not of PRS itself.
+ggplot(model_checks, aes(sample = residual)) +
+  geom_qq() +
+  geom_qq_line() +
+  theme_minimal()
+
+shapiro.test(model_checks$residual)
+```
+
+Use the `PRS` row in `summary(prs_gait_adjusted)` to describe the association after accounting for treatment, age and exercise. A positive coefficient indicates that higher PRS is associated with greater mean absolute deviation from upright; a negative coefficient indicates less deviation. Report the coefficient, its standard error, p-value and the number of complete donors. A p-value of at least 0.05 means insufficient evidence of the modelled association; it does not establish that there is no relationship. Interpret the linear model only if its assumptions are reasonably supported and there are enough complete donors to estimate the model. Spearman correlation is unadjusted and may differ from the adjusted model because of the clinical covariates.
+
+The gait outcome measures average deviation from upright. It does not directly measure temporal gait smoothness. The analysis uses one summary per donor, so the 700 measurements are not counted as 700 independent participants.
+
+**5. In a paragraph, summarise your findings and suggest directions for future research.**
+
+Provisional paragraph: this uses the supplied report's drug-screen, RNA-seq and clinical results, together with the corrected PRS means. Incorporate the actual Q1 and Q4 results, and the remaining linking results, before submitting. The existing PRS analyses must be rerun using the corrected scores.
+
+PD cases had higher correctly weighted polygenic risk scores than controls (mean 1.312 versus 1.045), while RNA-seq clustering only partly separated cases from controls, suggesting variation in gene-expression profiles within the PD group. The drug screen identified four compounds associated with increased neuronal viability following MPP exposure. In the clinical trial, the new compound group had lower mean absolute deviation from upright than the L-DOPA group, and the reported treatment difference remained significant after adjustment for age and exercise. These results identify candidates for further investigation but do not establish a causal link between genetic risk, gene expression and treatment response. Future research should validate the findings in larger independent cohorts, investigate the targets and mechanisms of the hit compounds in additional donor-derived neurons, and use longitudinal clinical measurements to test whether PRS or expression profiles predict gait outcomes and treatment response. Future trials should also assess longer-term efficacy and safety and measure temporal gait smoothness directly.

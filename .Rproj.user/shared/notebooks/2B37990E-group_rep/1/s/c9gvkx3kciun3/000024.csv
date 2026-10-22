@@ -1,0 +1,5 @@
+"0","top <- topTable(dt, coef = ""CasevsControl"", number = Inf, sort.by = ""none"")
+"
+"2","Error in topTable(dt, coef = ""CasevsControl"", number = Inf, sort.by = ""none"") : 
+  fit must be an MArrayLM object
+"

@@ -10,11 +10,11 @@ Load dataset:
 
 ```{r}
 library(tidyverse)
-drugscreen <- load("~/Desktop/biol90042_group_rep/drugscreen.Rda")
-gait<- load("~/Desktop/biol90042_group_rep/gait.Rda")
-prs<- load("~/Desktop/biol90042_group_rep/prs.Rda")
-rnaseq<- load("~/Desktop/biol90042_group_rep/rnaseq.Rda")
-rnaseq_gene_info<- load("~/Desktop/biol90042_group_rep/rnaseq_gene_info.Rda")
+drugscreen <- load("group3_data/drugscreen.Rda")
+gait<- load("group3_data/gait.Rda")
+prs<- load("group3_data/prs.Rda")
+rnaseq<- load("group3_data/rnaseq.Rda")
+rnaseq_gene_info<- load("group3_data/rnaseq_gene_info.Rda")
 ```
 
 ### **23.3.1 Population genetics**
@@ -246,7 +246,7 @@ library(ggrepel)
   #decide tests function to decide if a gene is differentially expressed or not with multiple testing correction
   dt <- decideTests(efit)
   
-  top <- topTable(efit, coef = "CasevsControl", number = Inf)
+  top <- topTable(efit, coef = "CasevsControl", number = Inf, sort.by = "none")
   #converted to tibble to make it easier to work with
   top_tibble <- as_tibble(top)
 
@@ -260,11 +260,13 @@ library(ggrepel)
     match(efit$genes$genes, entrez_genename_key$entrezid)]
 
   # now organise data from efit into a tibble format
-  ma_plot_data <- tibble(logFC = efit$coefficients[, "CasevsControl"],
-                       AvgExpr = efit$Amean,
-                       status = factor(as.numeric(dt[, "CasevsControl"])),
-                       gene = efit$genes$SYMBOL,
-                      p_value = efit$p.value[, "CasevsControl"])
+  ma_plot_data <- tibble(
+    logFC   = efit$coefficients[, "CasevsControl"],
+    AvgExpr = efit$Amean,
+    status  = factor(as.numeric(dt[, "CasevsControl"])),
+    gene    = efit$genes$SYMBOL,
+    adj_p   = top$adj.P.Val
+  )
 
 ma_plot_data_fct <- ma_plot_data %>%
   mutate(
@@ -280,7 +282,7 @@ ma_plot_data_fct <- ma_plot_data %>%
 # labelling of top most significant genes
 top_10_de_genes <- ma_plot_data_fct %>%
   filter(!is.na(gene)) %>%
-  slice_min(p_value, n = 10)
+  slice_min(adj_p, n = 10)
 
 # MA ggplot
 ggplot(ma_plot_data_fct, aes(x = AvgExpr, y = logFC, colour = status)) +
@@ -304,7 +306,7 @@ ggplot(ma_plot_data_fct, aes(x = AvgExpr, y = logFC, colour = status)) +
   theme_classic() # Keep the plot style consistent
 
 # Volcano Plot
-ggplot(ma_plot_data_fct, aes(x = logFC, y = -log10(p_value), colour = status)) +
+ggplot(ma_plot_data_fct, aes(x = logFC, y = -log10(adj_p), colour = status)) +
   geom_point(size = 1) +
   geom_label_repel(
     data = top_10_de_genes,
@@ -334,8 +336,7 @@ ggplot(ma_plot_data_fct, aes(x = logFC, y = -log10(p_value), colour = status)) +
 #use top_de_genes, join gene_ontology
 #first join top_de_genes with entrez_id
 top_de_genes <- ma_plot_data_fct |> 
-  filter(!is.na(gene)) |>  
-  slice_min(p_value, n = 39) |> 
+  slice_min(adj_p, n = 39) |> 
   mutate(gene_name = gene)
 
 top_de_genes_id <- left_join(
@@ -346,7 +347,7 @@ top_de_genes_id <- left_join(
 #now join top_de_genes_id with gene_ontology
 top_de_gene_ontology <- top_de_genes_id |> left_join(gene_ontology) 
 
-top_de_gene_ontology |> slice_min(p_value, n = 39) |> dplyr::select(gene, status, desc) 
+top_de_gene_ontology |> slice_min(adj_p, n = 39) |> dplyr::select(gene, status, desc) 
 
 ```
 
