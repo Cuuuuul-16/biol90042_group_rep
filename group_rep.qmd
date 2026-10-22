@@ -321,8 +321,10 @@ P6 <- ggplot(ma_plot_data_fct, aes(x = logFC, y = -log10(adj_p), colour = status
   geom_label_repel(
     data = top_10_de_genes,
     aes(label = gene),
-    show.legend = FALSE
-  ) +
+    show.legend = FALSE,
+    min.segment.length = 0,
+    segment.color = "grey50",
+    segment.size = 0.3) + 
   scale_colour_manual(values = c(
     "Not DE" = "grey70",
     "Down" = "#4C84A6",
@@ -859,9 +861,17 @@ shapiro.test(lm_model_PRSxtreatment_gait$residuals)#Normality of residuals: The 
 
 5.  In a paragraph, summarise your findings and suggest directions for future research.
 
+**PRS Summary**
+
+PD cases tended to have higher PRS than controls (Wilcoxon p = 1.013 × 10⁻⁸), supporting an association between genetic risk and PD status, although substantial overlap showed that PRS could not perfectly distinguish individuals with and without PD.
+
 **RNA seq. Summary**
 
 RNA-seq identified 39 differentially expressed genes at a 5% false discovery rate: the supplied GO annotations linked 21 upregulated genes to oxidative stress responses and 18 downregulated genes to synaptic transmission. Expression clustering also corresponded with PRS, with three lower-PRS cases clustering alongside controls, suggesting heterogeneity among patients.
+
+**Drug screening:**
+
+The luminescence heatmap showed no obvious spatial gradient or edge effect. Welch’s t-tests with Benjamini–Hochberg correction identified four compounds (cmpd_5386, cmpd_5118, cmpd_7466 and cmpd_6972) that significantly increased neuronal viability after MPP exposure (adjusted *p* \< 0.05). QQ plots showed no obvious deviations from normality, although the small sample size (four technical replicates per group) limited assessment. All four corresponding gene targets (MAPK1, LRP6, RIT2 and APBA3) were significantly downregulated in PD RNA-seq data (adjusted *p* \< 0.001), suggesting potential alterations in neuronal signalling and cellular homeostasis. Further GO analysis is needed to clarify the biological processes involved.
 
 **Clinical Trial Summary:**
 
@@ -870,5 +880,5 @@ The clinical trial analysis shows that participants receiving the new compound h
 future research: Since the trial only has 16 participants, larger studies are needed to determine is these findings are consistent within the more general population of PD patients. Additionally, along with age and exercise, future research can also investigate other gait-affecting factors such as disease severity or drug dosage.
 
 ```{r}
-Haoliang
+
 ```
