@@ -188,10 +188,6 @@ PRS |>
 # for ctrl, the p value is 0.007452, strong evidence against normality
 # to do a t-test, both group need to meet the normality assumption, since the ctrl group has violated the assumption, Wilcoxon rank-sum test will be applied here to compare the two groups instead of t-test.
 
-#check independence
-PRS |> summarise(n = n(), .by = donorid) |> filter(n > 1)
-#there is no rows appear, each donor ID contributes only one observations, and assuming participants were unrelated and sampled independently, the independence is met
-
 wilcox.test(Polygenic_risk_score ~ status, data = PRS)
 # the wilcoxon test statistics value is 15554 with a p-value of 1.013e-08. This suggests a extremely strong evidence that the PRS distribution differ between the Parkinson disease case group and the control group, with case group have higher PRS compare to the control group.
 ```
