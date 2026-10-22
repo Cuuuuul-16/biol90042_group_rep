@@ -4,7 +4,7 @@ format: html
 editor: visual
 ---
 
-## Group_rep
+## Group3_rep
 
 Load dataset:
 
@@ -17,7 +17,7 @@ rnaseq<- load("group3_data/rnaseq.Rda")
 rnaseq_gene_info<- load("group3_data/rnaseq_gene_info.Rda")
 ```
 
-### **23.3.1 Population genetics**
+### **1. Population genetics**
 
 1.  Calculate a PRS for each participant. Which participant has the highest PRS? The lowest?
 
@@ -201,7 +201,7 @@ wilcox.test(Polygenic_risk_score ~ status, data = PRS)
 # the wilcoxon test statistics value is 15554 with a p-value of 1.013e-08. This suggests a extremely strong evidence that the PRS distribution differ between the Parkinson disease case group and the control group, with case group have higher PRS compare to the control group.
 ```
 
-### **23.3.2 RNA-seq of patient iPSC-derived neurons**
+### **2. RNA-seq of patient iPSC-derived neurons**
 
 Firstly, load the packages
 
@@ -407,7 +407,7 @@ ggsave("Figures/MDS Plot of Gene Expression.png", plot = P7)
 P7
 ```
 
-### **23.3.3 Drug screening**
+### **3. Drug screening**
 
 1.  Using the `geom_tile()` function, visualise the luminescence across the plate. Do there appear to be any spatial patterns in this data?
 
@@ -549,7 +549,7 @@ question3_results <- t_test_results |>
   )
 ```
 
-### **23.3.4 Clinical trial**
+### **4. Clinical trial**
 
 1.  Plot each participants’ gait data and describe it using descriptive statistics. Which of these descriptive statistics do you think is most useful for capturing the overall gait smoothness and balance of a participant?
 
@@ -721,7 +721,7 @@ lm(absolute_mean ~ treatment.x + age, data = joined_data) %>% summary()
 lm(absolute_mean ~ treatment.x + age + exercise, data = joined_data) %>% summary()
 ```
 
-### **23.3.5 Bringing it together/linking between datasets**
+### **5. Bringing it together/linking between datasets**
 
 1.  Using their unique donor IDs, how many patients appear across all four arms of the study?
 
