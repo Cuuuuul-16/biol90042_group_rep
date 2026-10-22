@@ -3,7 +3,7 @@
     "path": "~/Library/Mobile Documents/com~apple~CloudDocs/University/BIOL90042/BIOL90042_Group_Project/biol90042_group_rep/group_rep.qmd",
     "project_path": "group_rep.qmd",
     "type": "quarto_markdown",
-    "hash": "0",
+    "hash": "2994190420",
     "contents": "",
     "dirty": false,
     "created": 1792640218702.0,
@@ -16,7 +16,7 @@
         "Source": "Source",
         "docOutlineVisible": "1",
         "rmdVisualCollapsedChunks": "",
-        "rmdVisualModeLocation": "32420:24475",
+        "rmdVisualModeLocation": "33376:23587",
         "cursorPosition": "0,0",
         "scrollLine": "0"
     },
@@ -25,7 +25,7 @@
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1792640590,
+    "last_content_update": 1792640679753,
     "read_only": false,
     "read_only_alternatives": []
 }
