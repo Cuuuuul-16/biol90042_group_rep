@@ -179,6 +179,10 @@ P4 <- ggplot(PRS, aes(sample=Polygenic_risk_score)) +
 ggsave("Figures/Normal Q-Q Plot of PRS.png", plot = P4)
 # QQ-plot does suggest normality for both case and control, a shapiro-wilk test will confirm this finding
 
+#test independence
+PRS |> summarise(n = n(), .by = donorid) |> filter(n > 1)
+#since no rows appear, each donor ID contribute to only one observation and assuming participants were unrelated and sampled independently, the independence assumption is reasonable.
+
 PRS |> 
   filter(status == "case") |> 
   pull(Polygenic_risk_score) |> 
@@ -823,6 +827,10 @@ plot(lm_model_PRS_gait)#visualise
 resettest(lm_model_PRS_gait)#Linearity: the reset test found no evidence that the model is not linear with p-value equals to 0.7465
 bptest(lm_model_PRS_gait)#Homoscedasticity: The Breusch–Pagan test found no evidence of unequal residual variance (p-value=0.6255)
 shapiro.test(lm_model_PRS_gait$residuals)#Normality of residuals: The Shapiro–Wilk test found no evidence that the residuals are not following a normal distribution (p-value=0.4728)
+
+gait_PRS |> summarise(n = n(), .by = donorid) |> filter(n > 1)
+#Independence: Each patient contributed one PRS and one gait summary hence there is only one observation per patient and assuming participants were unrelated and sampled independently therefore the independence of errors between patients is met which means one patient’s unexplained gait variation should not be related to another patient’s.
+
 #Independence: Each patient contributed one PRS and one gait summary hence there is only one observation per patient, therefore the independence of errors between patients is met which means one patient’s unexplained gait variation should not be related to another patient’s.
 #All four assumptions are met, and hence the liner model for PRS_gait is valid
 
