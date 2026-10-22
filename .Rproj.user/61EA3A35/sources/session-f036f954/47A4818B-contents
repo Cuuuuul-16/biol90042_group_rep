@@ -1,0 +1,305 @@
+install.packages("broom")
+install.packages("tidyrstats")
+install.packages("ggpubr")
+library(tidyverse)
+library(patchwork)
+library(broom)
+library(tidyrstats)
+library(ggpubr)
+# read in dosage data and clean it up a bit, remove any rows with NA's and also use the mutate() and case_when() to recode the mouse strains
+#recode meaning replacing the name of the strains. Black 6 to Black6, CD-1 to CD1, BALB C to BALBC
+
+mousezempic_dosage_data <- read_csv("data/mousezempic_dosage_data.csv")
+
+dosage_clean <- mousezempic_dosage_data |> 
+  na.omit() |> 
+  mutate(mouse_strain = case_when(
+    mouse_strain == "Black 6" ~ "Black6",
+    mouse_strain == "CD-1" ~ "CD1",
+    mouse_strain == "BALB C" ~ "BALBC",
+    .default = "UNKNOWN"
+  )) 
+  
+
+#Using statistical testing in R
+
+
+#ASSOCIATIONS BETWEEN TWO CATEGORICAL VARIABLES
+# Chi-squared test
+chisq.test(table(df$variable1, df$variable2))
+
+#it tests the following hypotheses:
+  
+# - Null hypothesis (𝐻0): the two categorical variables are independent (no association)
+# - Alternate hypothesis (𝐻1): the two categorical variables are associated
+
+  #Assumptions:
+    #observations are independent of each other
+    # the categories of each variable are mutually exclusive and exhaustive
+    # the expected cell counts are reasonably large (no more than 20% of cells should have an expected count below 5)
+    
+    # if not, use fisher.test()
+
+      #EXAMPLE: are the mice strains equally split across the sexes (for each mouse strain, are the number of male and female mice approximately equal)
+    #let's first consider above assumptions: they are independent, they are mutually exclusive, can check counts using contingency table
+    #pivot_wider function to do contingency tables: but easier way is using table function using base R
+
+      # table function takes vectors
+      # dataframe$column_name
+      table(dosage$mouse_strain, dosage$sex)
+      # Chi-square assumptions met, can proceed with test
+      chisq.test(table(dosage$mouse_strain, dosage$sex))
+      # or use pipe
+      table(dosage$mouse_strain, dosage$sex) |> chisq.test()
+      #p-value is high (0.976), accept null, there is no difference in the distribution of male and female mice strains
+      
+# QUESTION: We want to know whether mice were allocated evenly across the three experimental replicates (replicate), regardless of mouse_strain. 
+# Which line of code correctly generates the contingency table we would need to answer this?
+      table(dosage$mouse_strain, dosage$replicate)
+      
+# Activity:
+  # repeat the test on mouse_strain and sex, but this time use the fisher.test
+      table(dosage$mouse_strain, dosage$sex) |> fisher.test()
+
+#example of what happens if you have small counts
+      pilot_table <- matrix(
+        c(8, 2,
+          3, 7),
+        nrow = 2,
+        byrow = TRUE,
+        dimnames = list(
+          genotype = c("knockout", "wildtype"),
+          response = c("responder","non-responder")
+        )
+      )
+chisq.test(pilot_table)
+fisher.test(pilot_table)
+
+#One continuous variable and one categorical variable. Asking whether a continuous variable differs between groups
+#t-test for 2 groups, ANOVA for 3+ groups
+
+#T-TEST
+  #Assumptions
+    #observations independent
+    #the outcome is approximately normally distributed within each groups. If not, use the non-parametic alternative wilcox.test()
+    #the groups have approximately equal variance. If not, use Welch's correction: t.test(..., var.equal = FALSE)
+
+    #BEFORE TESTING, VISUALISE DATA
+    
+    #actvity:
+    # is there a difference in the weight_lost_g between male and female mice?
+      
+ggplot(
+  data = dosage_clean,
+  aes(x = sex, y = weight_lost_g)) +
+  geom_boxplot() + ylim(0,7)
+    #does look like there's some difference between groups
+    #does quick look at box plots ensure assumptions are met?
+
+#t-test
+#check for normality with a QQ plot
+#A QQ (quantile-quantile) plot compares the quantiles of our data against 
+#the quantiles we would expect if the data was perfectly normally distributed
+
+ggplot(
+  data = dosage,
+  aes(sample = weight_lost_g)) +
+  geom_qq() + geom_qq_line() + facet_wrap(~sex)
+#points deviate from straight line in each group, doesn't follow 
+#can confirm this using Shapiro Wilks test
+
+#shapiro.test(), takes a vector of what you're testing
+dosage |> 
+  filter(sex =="female") |> 
+  pull(weight_lost_g) |> 
+  shapiro.test()
+
+#p-value less than 0.05, so it's not normal. This means a t-test isn’t actually valid here 
+#(we should use the non-parametric alternative wilcox.test() instead), 
+#but for the sake of showing you how one works in R, let’s run it anyway.
+
+#assumption of normality is violated, what we should use then is wilcox test, not t.test()
+#we'll do both for teaching purposes
+
+# provide functions with: 
+t.test(formula, data, var.equal = TRUE)
+#formula is: y ~ x, used to define the relationship for statistical test
+#weight_lost_g ~ sex
+# var.equal = TRUE for a Student’s t-test (assuming variances are equal) 
+# or var.equal = FALSE for Welch’s t-test (assuming variances are not equal)
+
+t.test(weight_lost_g ~ sex, data = dosage, var.equal = TRUE)
+
+#the wilcox test works exactly the same way
+
+wilcox.test(weight_lost_g ~ sex, data = dosage, var.equal = TRUE)
+
+# ANOVA (or non parametric kruskal wallace test)
+#one continuous and one categorical
+#aov() or kruskal.test()
+# The t-test only compares two groups, so while we could use it to compare male vs female mice, 
+# if we want to compare weight_lost_g across all three mouse strains at once, we need its multi-group extension: 
+# the ANOVA (analysis of variance).
+# work pretty similarly to t.test and wilxoc.test but they are for when you have 3+ groups
+
+#First, visualise the data
+ggplot(dosage, aes(x = mouse_strain, y = weight_lost_g)) + geom_boxplot()
+
+# Note that, just like for the t-test, 
+# ANOVA assumes our continuous variable is approximately normally distributed 
+# (which we can check using a QQ-plot or Shapiro-Wilks test):
+ggplot(dosage, aes(sample = initial_weight_g)) +
+  geom_qq() +
+  geom_qq_line() +
+  # facet because we need to check normality for each group
+  facet_wrap(~mouse_strain)
+
+# does weight lost differ across mouse strain?
+# when we use the aov() function, we need to run something after it to get a p-value: summary()
+aov(weight_lost_g ~ mouse_strain, data = dosage) |> summary()
+
+#may be interested in post-hoc test finding the significance pairwise p values(s)
+#Tukey HSD - a way to find out specifically which pairs are significant
+aov(weight_lost_g ~ mouse_strain, data = dosage) |> TukeyHSD()
+# tells us there is significance between black-6 and BALBC, and CD-1
+# but not significance between CD-1 and BALB-C
+
+#Unlike for t.test(), the aov() function doesn’t have an argument for equal variances. 
+#If your variances aren’t equal, you need to instead use the oneway.test() function, 
+#which does have this argument: 
+oneway.test(weight_lost_g ~ mouse_strain, data = dosage, var.equal = FALSE)
+
+
+#Non parametic tests
+#When a parametric assumption (i.e. normality) is badly violated, 
+#we can turn to a non-parametric alternative instead. 
+#These tests don’t assume the outcome is normally distributed and instead test 
+#for differences in the ranks of the data.
+
+#WILCOXON TEST
+#The Wilcoxon rank-sum test (also called the Mann-Whitney test when applied on two samples, like we will do here) 
+#is the non-parametric equivalent of the t-test we covered earlier. Instead of comparing means, 
+#it tests whether one group tends to have overall higher or lower ranked values than the other.
+wilcox.test(weight_lost_g ~ sex, data = dosage)
+
+#Kruskal test
+#just like the t-test, the Wilcoxon test only compares two groups. 
+#The non-parametric version of the ANOVA we ran above is called the Kruskal-Wallis test, 
+#and we can run it using the kruskal.test() function:
+kruskal.test(weight_lost_g ~ mouse_strain, data = dosage) 
+
+# Correlation between two continuous variables
+#If both of our variables are continuous, we can measure the strength and 
+#direction of a linear relationship between them using a correlation coefficient.
+
+
+# cor.test
+  #Assumptions:
+    #Pearson: linear relationship, minimal outliers, normal distribution
+    #spearman: monotonic relationship
+
+#find the correlation between weight_lost_g and drug_dose
+#First check assumptions by plotting a scatterplot
+  ggplot(dosage, aes(x = drug_dose_g, y = weight_lost_g)) +
+    geom_point() +
+    # add geom_smooth to compare the points to a linear
+    # line of best fit
+    geom_smooth(method = "lm") +
+    labs(
+      x = "Drug dose (g)",
+      y = "Weight lost (g)",
+      title = "Correlation between drug dose and weight lost"
+    )
+#default method is pearson correlation
+cor.test(dosage$weight_lost_g, dosage$drug_dose_g)
+
+#set method using method argument
+cor.test(dosage$weight_lost_g, dosage$drug_dose_g, method = "spearman")
+
+# VISUALISING STATISTICAL TESTS WITH GGPUBR
+ggboxplot(
+  data = dosage,
+  # unlike in the ggplot() function, x and y are
+  # supplied directly, not in aes()
+  x = "sex", y = "weight_lost_g",
+  # in ggpubr, you add jitter using the 'add' argument
+  add = "jitter") +
+  stat_compare_means(method = "t.test") +
+  labs(x = "Sex", y = "Weight lost (g)")
+
+#The same idea works for our three-strain comparison, using method = "kruskal.test" (or method = "anova"):
+  
+  ggboxplot(dosage, x = "mouse_strain", y = "weight_lost_g", add = "jitter") +
+  stat_compare_means(method = "kruskal.test") +
+  labs(x = "Mouse strain", y = "Weight lost (g)")
+  
+# We can get ggpubr to add pairwise comparisons too, by supplying a list of the pairs we’re interested in to the comparisons argument:
+    
+    ggboxplot(dosage, x = "mouse_strain", y = "weight_lost_g", add = "jitter") +
+    # get the pairwise comparisons
+    stat_compare_means(
+      comparisons = list(c("BALBc", "Black6"), c("BALBc", "CD1"), c("Black6", "CD1"))) +
+    # get the overall p value and test name
+    stat_compare_means(method = "kruskal.test", label.y = 8) +
+    labs(x = "Mouse strain", y = "Weight lost (g)")
+    
+# Similarly to ggboxplot(), ggscatter() is another higher-level plotting function from ggpubr. It creates a scatterplot that we can annotate with stat_cor() to show the correlation coefficient and p value:
+      
+      ggscatter(dosage, x = "drug_dose_g", y = "weight_lost_g", add = "reg.line") +
+      stat_cor(method = "pearson") +
+      labs(x = "Drug dose (g)", y = "Weight lost (g)")
+
+#Linear models, can use on either continuous or discrete variables
+# when doing simple linear models, y should be continuous but your x can be discrete or continuous
+#Assumptions:
+  #linearity
+  #independence of residuals
+  #homscedasticity 
+  #residuals are approximately normally distributed
+
+#for example fit a linear model of weight_lost_g and sex - differences between groups
+lm(weight_lost_g ~ sex, data = dosage)
+
+#just like for the aov() we need to use summary() to see more info
+lm(weight_lost_g ~ sex, data = dosage) |> summary()
+#sexmale 4.9e-16 ***
+# this answers the question is there a difference between male and female weight lost
+
+#we can also do a linear model to compare both groups against 0
+# But what if we don’t want to compare the male vs female mice, 
+# and instead are just interested in knowing whether either sex lost a meaningful amount of weight at all? 
+# want to know did either sex lose weight overall
+#changing our formula to address this question
+lm(weight_lost_g ~ 0 + sex, data = dosage) |> summary()
+#this answers the question that both female and male mice lost a statistically significant amount of weight
+# 0 + sex seperates sex out as a covariate
+
+#linear model between two continuous variables
+lm(weight_lost_g ~ drug_dose_g, data = dosage) |> summary()
+
+# how to include covariates to try and account for confounders
+# predicting weight lost from drug dosage but also the mouse strain
+lm(weight_lost_g ~ drug_dose_g + mouse_strain, data = dosage_clean) |> summary()
+
+dosage |> ggplot(aes(x = mouse_strain, y = initial_weight_g)) + geom_boxplot()
+
+#Making linear modelling tidy
+
+
+# practice exercise
+# fit linear model of drug_dose_g (x) and tail_length_mm (y)
+lm(drug_dose_g ~ tail_length_mm, data = dosage) |> summary()
+# 2) find the mean of drug_dose_g and tail_length for each mouse strain use the summarise function from workshop 3
+dosage_clean |> 
+  summarise(
+    av_tail_length = mean(tail_length_mm),
+    av_dosage = mean(drug_dose_g),
+    .by = mouse_strain)
+# 3) given the answer to question 2, do you think that adding mouse_strain as a covariate to the linear model is a good idea?
+#yes adding as a covariate is a good idea
+# 4) what happens when you add it as a covariate?
+lm(tail_length_mm ~ drug_dose_g + mouse_strain, data = dosage)
+
+# simpsons paradox
+
+

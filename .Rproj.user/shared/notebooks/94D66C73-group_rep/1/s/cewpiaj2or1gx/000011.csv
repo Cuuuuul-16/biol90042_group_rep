@@ -1,0 +1,8 @@
+"0",""
+"0",""
+"0","# 2. check for normality in both groups"
+"0",""
+"0","ggplot(gait_summary, aes(sample = absolute_mean)) +"
+"0","  geom_qq() +"
+"0","  geom_qq_line() +"
+"0","  facet_wrap(~treatment)"

@@ -1,0 +1,22 @@
+"0","#Now we want to check that our samples group together as we'd expect based on our experimental design, by making an MDS plot. This will show us whether or not the controls group together, and the PD patients group together. To do this, we will use the plotMDS() function and then make the MDS plot in ggplot2
+plotMDS(dge, labels = dge$samples$group)
+
+mds_result <- plotMDS(dge)
+"
+"0","#create tibble"
+"0","mds_tibble <- tibble("
+"0","  x = mds_result$x,"
+"0","  y = mds_result$y,"
+"0","  sample = colnames(dge),"
+"0","  group = dge$samples$group"
+"0",")"
+"0","#"
+"0","dim1_var_explained <- round(mds_result$var.explained[1] * 100)"
+"0","dim2_var_explained <- round(mds_result$var.explained[2] * 100)"
+"0","#create ggplot"
+"0","ggplot(data = mds_tibble,"
+"0","       aes(x = x, y = y, colour = group)) + geom_point() + geom_text_repel(aes(label = sample)) +"
+"0","  labs("
+"0","    x = paste0(""Leading logFC dim 1 ("", dim1_var_explained, ""%)""),"
+"0","    y = paste0(""Leading logFC dim 2 ("", dim2_var_explained, ""%)"")"
+"0","  )"

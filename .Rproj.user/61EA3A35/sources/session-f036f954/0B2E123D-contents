@@ -1,0 +1,168 @@
+# Practice Questions for Mini Project 2
+# load in dataset
+#nycflights13
+
+install.packages("nycflights13")
+library(nycflights13)
+library(tidyverse)
+
+#data() function loads datasets from R packages, you won't have to do this in assessment
+data(flights)
+data(airlines)
+
+#revise some basic dplyr
+#Q look more closely at the flights dataset
+
+#Q which five flights have the longest departure delays
+flights |> 
+  slice_max(dep_delay, n = 5) |> 
+  relocate(dep_delay)
+
+#Q What was the overall average departure delay
+flights |> 
+  pull(dep_delay) |> 
+  mean(na.rm = TRUE)
+#OR
+summary(flights$dep_delay)
+#will tell you how many NA's there are
+
+#missing values
+#Q how many missing values are in arr_delay
+
+summary(flights$arr_delay)
+sum(is.na(flights$arr_delay))
+flights |> filter(is.na(arr_delay)) |> nrow()
+
+#Q Replace missing values in dep_delay and arr_delay with 999
+
+flights %>%
+  replace_na(list(dep_delay = 999, arr_delay = 999)) %>%
+  View()
+
+#Grouped summary
+#using summarise(.by...)
+#Q: which airlines has the most flights that are delayed for the longest on average
+flights |> 
+  na.omit() |> 
+  summarise(
+    av_delay_per_airline = mean(dep_delay),
+    .by = carrier
+  ) |> 
+  arrange(desc(av_delay_per_airline))
+ 
+# usr left_join to join 'airline' to the summarised flights
+flights |> 
+  summarise(
+    av_delay_per_airline = mean(dep_delay, na.rm = TRUE),
+    .by = carrier
+  ) |> 
+  #use left_join() to join it with 'airlines'
+  left_join(airlines)
+
+# left_join(df1, df2) is the same as df1 |>  left_join(df2)
+
+#Q: the average departure delay for each combination of airport (origin column)
+# and month (month column)
+flights_2 <- flights |> 
+  na.omit() |> 
+  summarise(
+    av_dep_delay_airportmonth = mean(dep_delay),
+    .by = c(origin, month)
+  )
+
+#alternatively
+flights |> 
+  group_by(origin, month) |> 
+  summarise(av_dep_delay = mean(dep_delay, na.rm = TRUE)) |> 
+  View()
+
+#reshape this data into a format where i have one column per origin, and one row per month
+flights_2 %>%
+  na.omit() |> 
+  pivot_wider(
+    names_from = origin,
+    values_from = av_dep_delay_airportmonth
+  ) |> 
+  arrange(month)
+
+#alternatively
+flights |> 
+  group_by(origin, month) |> 
+  summarise(av_dep_delay = mean(dep_delay, na.rm = TRUE)) |> 
+  pivot_wider(names_from = origin, values_from = av_dep_delay)
+
+#pivot_longer
+flights %>%
+  group_by(origin, month) |> 
+  summarise(av_dep_delay = mean(dep_delay, na.rm = TRUE)) |>
+  pivot_wider(names_from = origin, values_from = av_dep_delay) |> 
+  pivot_longer(
+    cols = c(EWR, JFK, LGA),
+    names_to = "origin",
+    values_to = "av_dep_delay"
+  )
+
+
+# SWITCHING TO WORKSHOP 4 MATERIAL (NOT ASSESSED IN MINI CODING PROJECT 2: DO NOT USE FOR PRACTICE MATERIAL)
+
+#activity
+#read in the dosage data
+dosage <- read.csv("~/Library/Mobile Documents/com~apple~CloudDocs/University/BIOL90042/BIOL90042_workshops/data/mousezempic_dosage_data.csv")
+
+#Let's build first ggplot
+#ggplot needs two pieces of info: 
+#data
+#aes
+ggplot(data = dosage, aes(x = initial_weight_g, y = tail_length_mm)) +
+  geom_point()
+
+#for example, we can do things to our data with dplyr then pipe straight into ggplot()
+dosage |> 
+  filter(cage_number == "1A") |> 
+  ggplot(aes(x = initial_weight_g, y = tail_length_mm)) +
+  geom_point()
+
+#add other layers using +, these layers are added in order
+ggplot(
+  data = dosage, 
+  aes(x = initial_weight_g, y = tail_length_mm)) +
+  geom_point() +
+  geom_smooth()
+
+##ggplot drops missing values with a warning
+
+# we can have multiple different aesthetics at once
+ggplot(
+  data = dosage, 
+  aes(x = initial_weight_g, y = tail_length_mm, 
+      colour = mouse_strain)) +
+  geom_point() +
+  geom_smooth()
+#many of the geoms have arguments you can use to control their behavior
+
+#how to save ggplots
+#first way: use ggsave() function
+
+ggsave("colourful_scatterplot.png", width = 15, height = 17, units = "cm")
+
+
+#second way:using 'plots' panel
+
+#Q Activity
+#Make your own ggplot, pick two columns from dosage 
+#that you want to visualise, then make plot and save it on your computer
+ ggplot(
+   data = dosage,
+   aes(x = mouse_strain, y = weight_lost_g)) +
+   geom_boxplot()
+ 
+
+
+
+
+
+
+
+
+
+

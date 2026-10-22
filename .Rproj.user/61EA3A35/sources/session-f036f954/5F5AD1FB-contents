@@ -1,0 +1,15 @@
+#ggplot continued
+# exercise:
+#Load in the tidyverse package
+library(tidyverse)
+
+#2. Read in the 'dosage' data that we've been using
+dosage <- read_csv("mousezempic_dosage_data.csv")
+
+#making a ggplot
+ggplot(
+  #first give the data
+  data = dosage,
+  aes(x = tail_length_mm, y = initial_weight_g)
+) +
+  geom_point() #allows us to add points to plot, takes whatever aesthetics you've specified and figures out how to represent in points
