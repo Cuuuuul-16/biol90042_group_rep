@@ -15,11 +15,6 @@ gait<- load("~/Desktop/biol90042_group_rep/gait.Rda")
 prs<- load("~/Desktop/biol90042_group_rep/prs.Rda")
 rnaseq<- load("~/Desktop/biol90042_group_rep/rnaseq.Rda")
 rnaseq_gene_info<- load("~/Desktop/biol90042_group_rep/rnaseq_gene_info.Rda")
-drugscreen <- load("../group3_data/drugscreen.Rda")
-gait<- load("../group3_data/gait.Rda")
-prs<- load("../group3_data/prs.Rda")
-rnaseq<- load("../group3_data/rnaseq.Rda")
-rnaseq_gene_info<- load("../group3_data/rnaseq_gene_info.Rda")
 ```
 
 ### **23.3.1 Population genetics**
@@ -70,6 +65,7 @@ PRS |>
     sd_PRS = sd(Polygenic_risk_score),
     .by = status
   ) # descriptive statistics of the distribution of PRS for both cases and controls
+
 ggplot(
   data = PRS,
   aes(x = Polygenic_risk_score, fill = status))+
@@ -97,13 +93,52 @@ ggplot(
     axis.text = element_text(colour = "black") # use black axis text for clear contrast
   )
 
+#create density plot to visualise the distribution of PRS based on the status
+ggplot(PRS, aes(x = Polygenic_risk_score, fill = status, colour = status)) +
+  geom_density(
+    alpha = 0.4,
+    linewidth = 1
+  ) +
+  scale_fill_manual(
+    values = c("case" = "#D96B5F", "ctrl" = "#4C84A6")
+  ) +
+  scale_colour_manual(
+    values = c("case" = "#D96B5F", "ctrl" = "#4C84A6")
+  ) +
+  labs(
+    title = "Distribution of Polygenic Risk Scores by Disease Status",
+    x = "Polygenic risk score (PRS)",
+    y = "Density",
+    fill = "Disease status",
+    colour = "Disease status"
+  ) +
+  theme_classic(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold", size = 14),
+    axis.title = element_text(face = "bold"),
+    axis.text = element_text(colour = "black"),
+    legend.position = "right"
+  )
+
+PRS_jitter <- PRS %>%
+  group_by(status) %>%
+  filter(
+    Polygenic_risk_score >= quantile(Polygenic_risk_score, 0.25) - 1.5 * IQR(Polygenic_risk_score),
+    Polygenic_risk_score <= quantile(Polygenic_risk_score, 0.75) + 1.5 * IQR(Polygenic_risk_score)
+  ) %>%
+  ungroup()
+
 ggplot(PRS, aes(x = status, y = Polygenic_risk_score, fill = status)) +
-  geom_boxplot(
+  geom_boxplot(    
     width = 0.5,
     alpha = 0.85,
     outlier.shape = 21,
     outlier.size = 2
   ) +
+  geom_jitter(
+  data = PRS_jitter,
+  width = 0.15,
+  alpha = 0.5)+
   scale_fill_manual(
   values = c("case" = "#D96B5F", "ctrl" = "#4C84A6") # set consistent colours for cases and controls
 ) +
@@ -120,8 +155,8 @@ theme(
   axis.text = element_text(colour = "black") # set axis text to black
 )
 
-#case group have higher mean and median PRS, with slightly greater standard deviation (variation) compare to the control group. The distributions of both group overlap substantially, hence the PRS cannot be perfectly distinguish case from control.
-#both disttibution are unimodal and symmetric, and both have two outliers, case outliers have the lowest PRS and the control outliers have the higher PRS
+#case group have higher mean and median PRS, with slightly greater standard deviation (variation) compare to the control group.
+#both distribution are unimodal and symmetric with control is a bit positively skewed, and both have two outliers, case outliers have the lowest PRS and the control outliers have the higher PRS. The distributions of both group overlap substantially, hence the PRS cannot be perfectly distinguish case from control.
 ```
 
 3.  Is there a statistically significant difference in the PRS of cases and controls? Ensure you check all the assumptions of the test you choose.
