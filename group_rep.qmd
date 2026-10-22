@@ -66,7 +66,7 @@ PRS |>
     .by = status
   ) # descriptive statistics of the distribution of PRS for both cases and controls
 
-ggplot(
+P1 <- ggplot(
   data = PRS,
   aes(x = Polygenic_risk_score, fill = status))+
   geom_histogram(bins = 15,
@@ -92,9 +92,10 @@ ggplot(
     axis.title = element_text(face = "bold"), # emphasise axis titles
     axis.text = element_text(colour = "black") # use black axis text for clear contrast
   )
+ggsave("Figures/Distribution of Polygenic Risk Scores.png", plot = P1)
 
 #create density plot to visualise the distribution of PRS based on the status
-ggplot(PRS, aes(x = Polygenic_risk_score, fill = status, colour = status)) +
+P2 <- ggplot(PRS, aes(x = Polygenic_risk_score, fill = status, colour = status)) +
   geom_density(
     alpha = 0.4,
     linewidth = 1
@@ -119,6 +120,7 @@ ggplot(PRS, aes(x = Polygenic_risk_score, fill = status, colour = status)) +
     axis.text = element_text(colour = "black"),
     legend.position = "right"
   )
+ggsave("Figures/Distribution of Polygenic Risk Scores by Disease Status.png", plot = P2)
 
 PRS_jitter <- PRS %>%
   group_by(status) %>%
@@ -128,7 +130,7 @@ PRS_jitter <- PRS %>%
   ) %>%
   ungroup()
 
-ggplot(PRS, aes(x = status, y = Polygenic_risk_score, fill = status)) +
+P3 <- ggplot(PRS, aes(x = status, y = Polygenic_risk_score, fill = status)) +
   geom_boxplot(    
     width = 0.5,
     alpha = 0.85,
@@ -154,6 +156,7 @@ theme(
   axis.title = element_text(face = "bold"), # make axis titles bold
   axis.text = element_text(colour = "black") # set axis text to black
 )
+ggsave("Figures/Polygenic Risk Scores by Disease Status.png", plot = P3)
 
 #case group have higher mean and median PRS, with slightly greater standard deviation (variation) compare to the control group.
 #both distribution are approximately unimodal with control is a bit positively skewed, and both have two outliers, case outliers have the lowest PRS and the control outliers have the higher PRS. The distributions of both group overlap substantially, hence the PRS cannot be perfectly distinguish case from control.
@@ -163,7 +166,7 @@ theme(
 
 ```{r}
 # check normality visually
-ggplot(PRS, aes(sample=Polygenic_risk_score)) +
+P4 <- ggplot(PRS, aes(sample=Polygenic_risk_score)) +
   geom_qq() +
   geom_qq_line() +
   facet_wrap(~status) +
@@ -173,6 +176,7 @@ ggplot(PRS, aes(sample=Polygenic_risk_score)) +
     y = "Sample Quantiles"
   ) +
   theme_classic()
+ggsave("Figures/Normal Q-Q Plot of PRS.png", plot = P4)
 # QQ-plot does suggest normality for both case and control, a shapiro-wilk test will confirm this finding
 
 PRS |> 
@@ -285,7 +289,7 @@ top_10_de_genes <- ma_plot_data_fct %>%
   slice_min(adj_p, n = 10)
 
 # MA ggplot
-ggplot(ma_plot_data_fct, aes(x = AvgExpr, y = logFC, colour = status)) +
+P5 <- ggplot(ma_plot_data_fct, aes(x = AvgExpr, y = logFC, colour = status)) +
   geom_point(size = 1) +
   geom_label_repel(
     data = top_10_de_genes,
@@ -304,9 +308,10 @@ ggplot(ma_plot_data_fct, aes(x = AvgExpr, y = logFC, colour = status)) +
     colour = "Expression status"
   ) +
   theme_classic() # Keep the plot style consistent
+ggsave("Figures/MA Plot: PD Cases vs Healthy Controls.png", plot = P5)
 
 # Volcano Plot
-ggplot(ma_plot_data_fct, aes(x = logFC, y = -log10(adj_p), colour = status)) +
+P6 <- ggplot(ma_plot_data_fct, aes(x = logFC, y = -log10(adj_p), colour = status)) +
   geom_point(size = 1) +
   geom_label_repel(
     data = top_10_de_genes,
@@ -325,7 +330,7 @@ ggplot(ma_plot_data_fct, aes(x = logFC, y = -log10(adj_p), colour = status)) +
     colour = "Expression status"
   ) +
   theme_classic()
-
+ggsave("Figures/Volcano Plot: PD Cases vs Healthy Controls.png", plot = P6)
 ```
 
 2.  Which gene ontology families do the DE genes belong to?
@@ -370,7 +375,7 @@ dim1_var_explained <- round(mds_result$var.explained[1] * 100)
 dim2_var_explained <- round(mds_result$var.explained[2] * 100)
 
 # Create MDS plot
-ggplot(mds_tibble, aes(x = x, y = y, colour = group)) +
+P7 <- ggplot(mds_tibble, aes(x = x, y = y, colour = group)) +
   geom_point(size = 3) + # show sample clustering
   geom_text_repel(aes(label = sample), size = 3, box.padding = 0.5,
   point.padding = 0.2) + # label samples, reduce overlap between labels
@@ -390,6 +395,7 @@ ggplot(mds_tibble, aes(x = x, y = y, colour = group)) +
     axis.title = element_text(face = "bold"),
     axis.text = element_text(colour = "black")
   )
+ggsave("Figures/MDS Plot of Gene Expression.png", plot = P7)
 ```
 
 ### **23.3.3 Drug screening**
@@ -411,7 +417,7 @@ plate1_long <- plate1 |>
   )
 
 # Heat map
-ggplot(plate1_long, aes(x = col_num, y = row_num, fill = RLU)) +
+P8 <- ggplot(plate1_long, aes(x = col_num, y = row_num, fill = RLU)) +
   geom_tile() +
   scale_fill_gradient(
     low = "#DCEAF4",
@@ -431,7 +437,7 @@ ggplot(plate1_long, aes(x = col_num, y = row_num, fill = RLU)) +
     plot.title = element_text(face = "bold", size = 14),
     axis.title = element_text(face = "bold")
   )
-
+ggsave("Figures/Luminescence Across the 1536-Well Plate.PNG", plot = P8)
 # Most values have relatively similar luminescence values.
 # A few individual wells have much higher luminescence, coloured with dark blue.
 # No obvious consistent gradient from one side of the plate to the other. 
@@ -575,7 +581,7 @@ gait_long <- gait_long |>  mutate(time = as.numeric(time))
 # plot each participant's gait measurements across the 700 seconds
 # horizontal line at 0 represents perfectly upright orientation
 
-ggplot(gait_long, aes(x = time, y = gait, colour = treatment)) +
+P9 <- ggplot(gait_long, aes(x = time, y = gait, colour = treatment)) +
   geom_line(linewidth = 0.3) +
   geom_hline(yintercept = 0, colour = "grey50") + # Mark upright orientation
   facet_wrap(~donorid) +
@@ -594,7 +600,7 @@ ggplot(gait_long, aes(x = time, y = gait, colour = treatment)) +
     plot.title = element_text(face = "bold", size = 14),
     axis.title = element_text(face = "bold")
   )
-  
+ggsave("Figures/Gait Orientation Over Time.png", plot = P9)
 
 #calculate descriptive statistics for all participants
 
