@@ -1,8 +1,0 @@
-"0",""
-"0","# Check assumptions for t-test:"
-"0",""
-"0",""
-"0","# 1. visualise data and check for equal variances between the 2 treatment groups"
-"0",""
-"0","ggplot(gait_summary, aes(x = treatment, y = absolute_mean)) +"
-"0","  geom_boxplot() "

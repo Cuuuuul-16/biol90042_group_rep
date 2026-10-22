@@ -1,6 +1,0 @@
-"0","library(tidyverse)"
-"0","drugscreen <- load(""../group3_data/drugscreen.Rda"")"
-"0","gait<- load(""../group3_data/gait.Rda"")"
-"0","prs<- load(""../group3_data/prs.Rda"")"
-"0","rnaseq<- load(""../group3_data/rnaseq.Rda"")"
-"0","rnaseq_gene_info<- load(""../group3_data/rnaseq_gene_info.Rda"")"

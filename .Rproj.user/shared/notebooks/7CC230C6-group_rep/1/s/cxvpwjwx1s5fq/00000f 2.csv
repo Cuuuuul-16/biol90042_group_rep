@@ -1,4 +1,0 @@
-"0","library(tidyverse)"
-"0","drugscreen <- load(""~/Desktop/biol90042_group_rep/drugscreen.Rda"")"
-"2","错误于readChar(con, 5L, useBytes = TRUE): 无法打开链结
-"

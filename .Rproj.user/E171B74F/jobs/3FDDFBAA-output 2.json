@@ -1,5 +1,0 @@
-[1,"==> quarto preview group_rep.qmd --to html --no-watch-inputs --no-browse\n\n"]
-[1,"\r\n\r\nprocessing file: group_rep.qmd\r\n\r  |                                                         \r  |                                                   |   0%\r  |                                                         \r  |.                                                  |   3%                   \r  |                                                         \r  |...                                                |   5% [unnamed-chunk-1] "]
-[1,"\r\n\r\nError in `readChar()`:\r\n! cannot open the connection\r\nBacktrace:\r\n    ▆\r\n 1. └─base::load(\"~/Desktop/biol90042_group_rep/drugscreen.Rda\")\r\n 2.   └─base::readChar(con, 5L, useBytes = TRUE)\r\n"]
-[1,"\r\r\nQuitting from group_rep.qmd:11-18 [unnamed-chunk-1]\r\n                                                                                                             \r\nExecution halted\r\n"]
-[1,"WARN: Error encountered when rendering files\n"]

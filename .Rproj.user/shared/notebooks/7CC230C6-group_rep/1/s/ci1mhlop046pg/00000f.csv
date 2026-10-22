@@ -1,3 +1,0 @@
-"0","# Find the target and mechanism of action for the significant compounds."
-"0","compound_dict |> "
-"0","  filter(id %in% c(""cmpd_5386"", ""cmpd_5118"", ""cmpd_7466"", ""cmpd_6972""))"

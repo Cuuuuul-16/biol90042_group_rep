@@ -1,5 +1,0 @@
-"0","#check normality visually"
-"0","ggplot(PRS_filtered, aes(sample=PRS))+"
-"0","  geom_qq()+"
-"0","  geom_qq_line()+"
-"0","  facet_wrap(~status)"

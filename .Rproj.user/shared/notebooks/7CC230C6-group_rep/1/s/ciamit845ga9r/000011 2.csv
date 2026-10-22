@@ -1,2 +1,0 @@
-"0","PRS_filtered |> "
-"0","  slice_min(PRS, n=1) #participant with the lowest PRS"
