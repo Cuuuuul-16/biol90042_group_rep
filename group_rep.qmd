@@ -787,6 +787,8 @@ View(target_go)
 
 4.  Is there any relationship between the PRS and gait of patients in the clinical trial?
 
+The relationship between PRS and gait of patients (measured using absolute mean deviation from upright) was analysed using multiple linear regression. After adjusting for treatment, age and exercise, PRS was not significantly associated with absolute mean gait (coefficient= 0.39397, p = 0.302522). A second model was used to investigate whether the PRS-gait relationship differed between the L-DOPA and new compound groups. The difference in the PRS-gait relationship between treatment groups was not statistically significant (coefficient = -1.57617, p = 0.123689), showing that there is insufficient evidence of the PRS-gait relationship being different between treatment groups. Overall, these analyses indicate that PRS is not a significant predictor of absolute mean gait and that there is insufficient evidence of the PRS-gait association varying by treatment.
+
 ```{r}
 find("select")
 select <- dplyr::select#maybe due to laptop issue, find("select") [1] "package:OrganismDbi"   "package:AnnotationDbi" "package:dplyr"   
