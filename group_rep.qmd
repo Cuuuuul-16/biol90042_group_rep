@@ -171,10 +171,12 @@ library(ggrepel)
 ```{r}
 # Firstly, we need to filter our lowly expressed genes to increase our statistical power. To do this, we will use the filterByExpr() function in the edgeR package. This will keep genes with a count of 10 or more in at least 8 samples (as we have 8 samples per group)
   keep <- filterByExpr(dge)
+  
 # to apply this filter to the DGE object, we will use [] to filter out FALSE hits (lowly expressed genes) and assign this dge
   dge <- dge[keep, , keep.lib.sizes = FALSE]
 
 # Now we need to normalise our data by converting it to counts per million (CPM), so we can compare samples and groups, and account for RNA composition bias. To do this we will use the TMM method to calculate the normalisation factor for each sample. normLibSizes() function can be used to calculate normalisation factors
+  
   dge <- normLibSizes(dge, method = "TMM")
 # the normalisation factors in dge$samples are close to 1 in all samples, suggesting minimal difference in RNA composition between samples
 
@@ -215,7 +217,7 @@ library(ggrepel)
   
   # turning efit$genes into character
   efit$genes$genes <- as.character(efit$genes$genes)
-  # so I can now change efit$genes to include SYMBOL column which matches the                    entrez_genename_key#entrezid to efit$genes$genes, and supplies the                             entrez_genename_key$gene_name to the efit$genes dataframe
+  # so I can now change efit$genes to include SYMBOL column which matches the entrez_genename_key#entrezid to efit$genes$genes, and supplies the entrez_genename_key$gene_name to the efit$genes dataframe
   efit$genes$SYMBOL <- entrez_genename_key$gene_name[
     match(efit$genes$genes, entrez_genename_key$entrezid)]
 
@@ -261,9 +263,10 @@ p1 <- ggplot(ma_plot_data_fct, aes(x = AvgExpr, y = logFC, colour = status)) +
     colour = "Expression status"
   ) +
   theme_classic() # Keep the plot style consistent
-  
+  p1
   #save plot
-  ggsave("Figures/MA_plot", plot = p1)
+  ggsave("Figures/MA_plot.png", plot = p1)
+
 
 # Volcano Plot
 ggplot(ma_plot_data_fct, aes(x = logFC, y = -log10(p_value), colour = status)) +
