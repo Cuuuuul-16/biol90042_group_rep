@@ -93,7 +93,7 @@ P1 <- ggplot(
     axis.text = element_text(colour = "black") # use black axis text for clear contrast
   )
 ggsave("Figures/Distribution of Polygenic Risk Scores.png", plot = P1)
-
+P1
 #create density plot to visualise the distribution of PRS based on the status
 P2 <- ggplot(PRS, aes(x = Polygenic_risk_score, fill = status, colour = status)) +
   geom_density(
@@ -121,7 +121,7 @@ P2 <- ggplot(PRS, aes(x = Polygenic_risk_score, fill = status, colour = status))
     legend.position = "right"
   )
 ggsave("Figures/Distribution of Polygenic Risk Scores by Disease Status.png", plot = P2)
-
+P2
 PRS_jitter <- PRS %>%
   group_by(status) %>%
   filter(
@@ -157,7 +157,7 @@ theme(
   axis.text = element_text(colour = "black") # set axis text to black
 )
 ggsave("Figures/Polygenic Risk Scores by Disease Status.png", plot = P3)
-
+P3
 #case group have higher mean and median PRS, with slightly greater standard deviation (variation) compare to the control group.
 #both distribution are approximately unimodal with control is a bit positively skewed, and both have two outliers, case outliers have the lowest PRS and the control outliers have the higher PRS. The distributions of both group overlap substantially, hence the PRS cannot be perfectly distinguish case from control.
 ```
@@ -177,6 +177,7 @@ P4 <- ggplot(PRS, aes(sample=Polygenic_risk_score)) +
   ) +
   theme_classic()
 ggsave("Figures/Normal Q-Q Plot of PRS.png", plot = P4)
+P4
 # QQ-plot does suggest normality for both case and control, a shapiro-wilk test will confirm this finding
 
 #test independence
@@ -313,7 +314,7 @@ P5 <- ggplot(ma_plot_data_fct, aes(x = AvgExpr, y = logFC, colour = status)) +
   ) +
   theme_classic() # Keep the plot style consistent
 ggsave("Figures/MA Plot: PD Cases vs Healthy Controls.png", plot = P5)
-
+P5
 # Volcano Plot
 P6 <- ggplot(ma_plot_data_fct, aes(x = logFC, y = -log10(adj_p), colour = status)) +
   geom_point(size = 1) +
@@ -335,6 +336,7 @@ P6 <- ggplot(ma_plot_data_fct, aes(x = logFC, y = -log10(adj_p), colour = status
   ) +
   theme_classic()
 ggsave("Figures/Volcano Plot: PD Cases vs Healthy Controls.png", plot = P6)
+P6
 ```
 
 2.  Which gene ontology families do the DE genes belong to?
@@ -400,6 +402,7 @@ P7 <- ggplot(mds_tibble, aes(x = x, y = y, colour = group)) +
     axis.text = element_text(colour = "black")
   )
 ggsave("Figures/MDS Plot of Gene Expression.png", plot = P7)
+P7
 ```
 
 ### **23.3.3 Drug screening**
@@ -442,6 +445,7 @@ P8 <- ggplot(plate1_long, aes(x = col_num, y = row_num, fill = RLU)) +
     axis.title = element_text(face = "bold")
   )
 ggsave("Figures/Luminescence Across the 1536-Well Plate.PNG", plot = P8)
+P8
 # Most values have relatively similar luminescence values.
 # A few individual wells have much higher luminescence, coloured with dark blue.
 # No obvious consistent gradient from one side of the plate to the other. 
@@ -605,7 +609,7 @@ P9 <- ggplot(gait_long, aes(x = time, y = gait, colour = treatment)) +
     axis.title = element_text(face = "bold")
   )
 ggsave("Figures/Gait Orientation Over Time.png", plot = P9)
-
+P9
 #calculate descriptive statistics for all participants
 
 gait_summary <- gait_long |> 
@@ -764,6 +768,7 @@ P10 <- ggplot(mds_tibble_joined, aes(x = x, y = y, colour = Polygenic_risk_score
     axis.text = element_text(colour = "black")
   )
 ggsave("Figures/MDS Plot of Gene Expression and Polygenic Risk Score.png", plot = P10)
+P10
 ```
 
 3.  Are any of the gene targets of hit compounds from the drug screen, differentially expressed in RNA-seq? Which GO terms are they associated with and what might this tell you about the pathology of PD?
