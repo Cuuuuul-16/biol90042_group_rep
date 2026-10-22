@@ -10,16 +10,11 @@ Load dataset:
 
 ```{r}
 library(tidyverse)
-drugscreen <- load("~/Desktop/biol90042_group_rep/drugscreen.Rda")
-gait<- load("~/Desktop/biol90042_group_rep/gait.Rda")
-prs<- load("~/Desktop/biol90042_group_rep/prs.Rda")
-rnaseq<- load("~/Desktop/biol90042_group_rep/rnaseq.Rda")
-rnaseq_gene_info<- load("~/Desktop/biol90042_group_rep/rnaseq_gene_info.Rda")
-drugscreen <- load("../group3_data/drugscreen.Rda")
-gait<- load("../group3_data/gait.Rda")
-prs<- load("../group3_data/prs.Rda")
-rnaseq<- load("../group3_data/rnaseq.Rda")
-rnaseq_gene_info<- load("../group3_data/rnaseq_gene_info.Rda")
+drugscreen <- load("group3_data/drugscreen.Rda")
+gait<- load("group3_data/gait.Rda")
+prs<- load("group3_data/prs.Rda")
+rnaseq<- load("group3_data/rnaseq.Rda")
+rnaseq_gene_info<- load("group3_data/rnaseq_gene_info.Rda")
 ```
 
 ### **23.3.1 Population genetics**
