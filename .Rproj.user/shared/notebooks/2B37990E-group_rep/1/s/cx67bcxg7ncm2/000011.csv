@@ -1,0 +1,7 @@
+"0","# Find the Entrez IDs for the four hit target genes"
+"0","targeted_genes <- entrez_genename_key |> "
+"0","  filter(gene_name %in% c(""MAPK1"", ""LRP6"", ""RIT2"", ""APBA3""))"
+"0",""
+"0","target_go <- gene_ontology |> "
+"0","  filter(entrezgene_id %in% targeted_genes$entrezid)"
+"0","View(target_go)"
